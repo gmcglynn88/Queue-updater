@@ -341,33 +341,21 @@
         agents = await fetchAgentsByManagementUnit(managementUnitId, token);
       }
 
-      // Fetch queues for each agent
+      // Fetch queues for each agent and filter based on selected queue
       const agentsWithQueues = await Promise.all(agents.map(async agent => {
         const queues = await fetchAgentQueues(agent.id, token);
         return { ...agent, queues }; // Ensure the agent object includes the name and queues
       }));
 
+      // If a queue is selected, filter agents based on whether they are assigned to the selected queue
+      if (queueId) {
+        agentsWithQueues = agentsWithQueues.filter(agent =>
+          agent.queues.some(queue => queue.id === queueId)
+        );
+      }
+
       console.log("Agents with queues:", agentsWithQueues); // Debugging log
       populateQueueTable(agentsWithQueues);
-    }
-
-    async function fetchAgentsByQueue(queueId, token) {
-      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
-      try {
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await response.json();
-        return data.entities.map(member => ({
-          id: member.user.id,
-          name: member.user.name,
-          queueId: queueId, // Store the queue ID for later use
-          queueName: member.queue.name // Extract the queue name from the member object
-        }));
-      } catch (error) {
-        console.error("Error fetching agents by queue:", error);
-        return [];
-      }
     }
 
     function populateQueueTable(agents) {
