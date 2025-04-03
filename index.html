@@ -188,15 +188,18 @@
         });
 
         const result = await response.json();
-        if (response.ok) {
-          console.log('Access Token:', result.access_token);
-          return result.access_token;
-        } else {
-          console.error('Error obtaining access token:', result);
+        
+        if (!response.ok) {
+          console.error('Error response:', result);
+          alert('Error: ' + result.error_description); // Display error message for debugging
           return null;
         }
+
+        console.log('Access Token:', result.access_token);
+        return result.access_token;
       } catch (error) {
         console.error('Error fetching access token:', error);
+        alert('An error occurred: ' + error.message);
         return null;
       }
     }
@@ -216,212 +219,6 @@
       populateAgentDropdowns();
       populateManagementUnitDropdowns();
       setupEventListeners(token);
-    }
-
-    async function fetchQueues(token) {
-      const url = 'https://api.mypurecloud.ie/api/v2/routing/queues';
-      try {
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await response.json();
-        availableQueues = data.entities || [];
-      } catch (error) {
-        console.error("Error fetching queues:", error);
-      }
-    }
-
-    async function fetchAllAgents(token) {
-      const url = 'https://api.mypurecloud.ie/api/v2/users';
-      try {
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await response.json();
-        availableAgents = data.entities || [];
-      } catch (error) {
-        console.error("Error fetching agents:", error);
-      }
-    }
-
-    async function fetchManagementUnits(token) {
-      const url = 'https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits';
-      try {
-        const response = await fetch(url, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await response.json();
-        availableManagementUnits = data.entities || [];
-      } catch (error) {
-        console.error("Error fetching management units:", error);
-      }
-    }
-
-    function populateQueueDropdown() {
-      const queueDropdown = document.getElementById('queueDropdown');
-      queueDropdown.innerHTML = '<option value="">Select Queue</option>';
-      availableQueues.forEach(queue => {
-        const option = document.createElement('option');
-        option.value = queue.id;
-        option.textContent = queue.name;
-        queueDropdown.appendChild(option);
-      });
-    }
-
-    function populateAgentDropdowns() {
-      const agentDropdownForQueue = document.getElementById('agentDropdownForQueue');
-      agentDropdownForQueue.innerHTML = '<option value="">Select Agent</option>';
-      availableAgents.forEach(agent => {
-        const option = document.createElement('option');
-        option.value = agent.id;
-        option.textContent = agent.name;
-        agentDropdownForQueue.appendChild(option);
-      });
-    }
-
-    function populateManagementUnitDropdowns() {
-      const queueDropdown = document.getElementById('managementUnitDropdownForQueue');
-      queueDropdown.innerHTML = '<option value="">Select Management Unit</option>';
-      availableManagementUnits.forEach(unit => {
-        const option = document.createElement('option');
-        option.value = unit.id;
-        option.textContent = unit.name;
-        queueDropdown.appendChild(option);
-      });
-    }
-
-    function setupEventListeners(token) {
-      document.getElementById('fetchAgentsForQueue').addEventListener('click', () => fetchAgentsForQueue(token));
-      document.getElementById('updateQueues').addEventListener('click', () => updateSelectedQueues(token));
-      
-      document.getElementById('selectAllAgentsForQueue').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('#agentsTableForQueue tbody input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = this.checked;
-        });
-      });
-    }
-
-    async function fetchAgentsForQueue(token) {
-      const queueId = document.getElementById('queueDropdown').value;
-      const agentId = document.getElementById('agentDropdownForQueue').value;
-      const managementUnitId = document.getElementById('managementUnitDropdownForQueue').value;
-
-      if (!queueId && !agentId && !managementUnitId) {
-        alert('Please select a queue, agent, or management unit first.');
-        return;
-      }
-
-      let agents = [];
-      if (queueId) {
-        agents = await fetchAgentsByQueue(queueId, token);
-      } else if (agentId) {
-        // If an agent is selected, return only that agent
-        const selectedAgent = availableAgents.find(agent => agent.id === agentId);
-        agents = selectedAgent ? [selectedAgent] : [];
-      } else if (managementUnitId) {
-        agents = await fetchAgentsByManagementUnit(managementUnitId, token);
-      }
-
-      // Fetch queues for each agent and filter based on selected queue
-      const agentsWithQueues = await Promise.all(agents.map(async agent => {
-        const queues = await fetchAgentQueues(agent.id, token);
-        return { ...agent, queues }; // Ensure the agent object includes the name and queues
-      }));
-
-      // If a queue is selected, filter agents based on whether they are assigned to the selected queue
-      if (queueId) {
-        agentsWithQueues = agentsWithQueues.filter(agent =>
-          agent.queues.some(queue => queue.id === queueId)
-        );
-      }
-
-      console.log("Agents with queues:", agentsWithQueues); // Debugging log
-      populateQueueTable(agentsWithQueues);
-    }
-
-    function populateQueueTable(agents) {
-      const tableBody = document.querySelector('#agentsTableForQueue tbody');
-      tableBody.innerHTML = "";
-
-      agents.forEach(agent => {
-        let row = document.createElement("tr");
-        row.innerHTML = `
-          <td><input type="checkbox" data-user-id="${agent.id}"></td>
-          <td>${agent.name || 'N/A'}</td>
-          <td>${agent.queues ? agent.queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
-          <td>
-            <select data-user-id="${agent.id}">
-              <option value="">Select Queue</option>
-              ${availableQueues.map(queue => `<option value="${queue.id}">${queue.name}</option>`).join('')}
-            </select>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-    }
-
-    async function updateSelectedQueues(token) {
-      const checkboxes = document.querySelectorAll('#agentsTableForQueue tbody input[type="checkbox"]:checked');
-      
-      if (checkboxes.length === 0) {
-        alert('Please select at least one agent to update.');
-        return;
-      }
-
-      const updates = [];
-      
-      checkboxes.forEach(checkbox => {
-        const userId = checkbox.getAttribute('data-user-id');
-        const row = checkbox.closest('tr');
-        const queueSelect = row.querySelector('select');
-        const queueId = queueSelect.value;
-        
-        if (queueId) {
-          updates.push({ userId, queueId });
-        }
-      });
-
-      if (updates.length === 0) {
-        alert('No valid updates selected. Please ensure you have selected a queue for each agent.');
-        return;
-      }
-
-      try {
-        const results = await Promise.all(updates.map(update => processQueueUpdate(update, token)));
-        console.log("Update results:", results);
-        alert('Queue updates completed successfully!');
-        // Refresh the agent list
-        fetchAgentsForQueue(token);
-      } catch (error) {
-        console.error("Error updating queues:", error);
-        alert('An error occurred while updating queues. Please check the console for details.');
-      }
-    }
-
-    async function processQueueUpdate(update, token) {
-      const { userId, queueId } = update;
-      
-      // Add the agent to the queue
-      const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/routingqueues/${queueId}/members`;
-      const body = {
-        id: queueId,
-        member: {
-          id: userId,
-          name: availableAgents.find(agent => agent.id === userId)?.name || 'Unknown'
-        }
-      };
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-      
-      return response.json();
     }
 
     // Initialize app
