@@ -1,17 +1,479 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- [Previous head and styles remain the same] -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPI Queue Updates</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;700&display=swap">
+  <style>
+    body {
+      font-family: 'Proxima Nova', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #63AB8F;
+      color: white;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .logo-button {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .logo-button img {
+      height: 50px;
+      background-color: transparent;
+    }
+    .divider {
+      border: none;
+      height: 1px;
+      background-color: #ddd;
+      margin: 0;
+    }
+    .container {
+      padding: 20px;
+      background-color: white;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin: 20px auto;
+      max-width: 1200px;
+    }
+    label, select, input, button {
+      display: block;
+      margin: 10px 0;
+    }
+    label {
+      font-weight: bold;
+    }
+    select, input, button {
+      margin-top: 10px;
+      padding: 12px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #63AB8F;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #4d8c73;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #63AB8F;
+      color: white;
+    }
+    .select-all-checkbox {
+      margin-bottom: 10px;
+    }
+    .filter-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-container label {
+      margin-bottom: 0;
+    }
+    .filter-container select {
+      margin-top: 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 18px;
+      color: #63AB8F;
+    }
+    .error-message {
+      color: #d9534f;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #d9534f;
+      border-radius: 4px;
+      background-color: #f9f2f2;
+    }
+  </style>
+</head>
 <body>
-  <!-- [Previous HTML remains the same] -->
+  <header>
+    <h1>IPI Queue Updates</h1>
+    <button class="logo-button" id="refreshButton">
+      <img src="https://raw.githubusercontent.com/gmcglynn88/TimeoffApp/main/IPI_Primary%20Identity_Corporate_REVERSED_ECC.png" alt="Consulting Logo">
+    </button>
+  </header>
+  <div class="divider"></div>
+
+  <div class="container">
+    <div id="loginSection" style="text-align: center; margin: 20px;">
+      <div class="loading">Authenticating with PureCloud...</div>
+    </div>
+
+    <div id="appContent" style="display: none;">
+      <div id="errorContainer" style="display: none;"></div>
+      
+      <div class="filter-container">
+        <label for="queueDropdown">Select Queue:</label>
+        <select id="queueDropdown"></select>
+        <label for="agentDropdownForQueue">Or Select Agent:</label>
+        <select id="agentDropdownForQueue"></select>
+        <label for="managementUnitDropdownForQueue">Or Select Management Unit:</label>
+        <select id="managementUnitDropdownForQueue"></select>
+      </div>
+
+      <button id="fetchAgentsForQueue">Get Agents</button>
+
+      <table id="agentsTableForQueue">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllAgentsForQueue" class="select-all-checkbox"></th>
+            <th>Agent</th>
+            <th>Current Queues</th>
+            <th>Queue Change</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <button id="updateQueues">Update Selected Queues</button>
+    </div>
+  </div>
 
   <script>
-    // [Previous constants and most functions remain the same until processQueueUpdate]
+    const clientId = '81f81d91-df27-436b-aa39-4e65dd2ce7e1';
+    const redirectUri = 'https://gmcglynn88.github.io/Queue-updater/';
+    const responseType = 'token';
+    const oauthUrl = `https://login.mypurecloud.ie/oauth/authorize?client_id=${clientId}&response_type=${responseType}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy
+
+    let availableQueues = [];
+    let availableAgents = [];
+    let availableManagementUnits = [];
+    let token = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      token = params.get('access_token');
+
+      if (token) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        initializeApp(token);
+      } else {
+        window.location.href = oauthUrl;
+      }
+    });
+
+    function showError(message) {
+      const errorContainer = document.getElementById('errorContainer');
+      errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+      errorContainer.style.display = 'block';
+    }
+
+    async function initializeApp(token) {
+      console.log("Initializing app with token...");
+      try {
+        await fetchAllQueues(token);
+        await fetchAllAgents(token);
+        await fetchManagementUnits(token);
+        populateQueueDropdown();
+        populateAgentDropdowns();
+        populateManagementUnitDropdowns();
+        setupEventListeners(token);
+      } catch (error) {
+        console.error("Initialization error:", error);
+        showError("Error initializing application. Please try again.");
+        setTimeout(() => window.location.href = oauthUrl, 3000);
+      }
+    }
+
+    async function fetchWithProxy(url, options = {}) {
+      try {
+        const proxyResponse = await fetch(proxyUrl + url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        });
+        
+        if (proxyResponse.ok) return proxyResponse;
+        
+        // If proxy fails, try direct
+        const directResponse = await fetch(url, options);
+        if (!directResponse.ok) throw new Error("Both proxy and direct connections failed");
+        return directResponse;
+      } catch (error) {
+        console.error("Fetch error:", error);
+        throw error;
+      }
+    }
+
+    async function fetchAllQueues(token) {
+      let allQueues = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalQueues = 0;
+      
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/routing/queues?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetchWithProxy(url, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.message || "Failed to fetch queues");
+        
+        allQueues = allQueues.concat(data.entities || []);
+        totalQueues = data.total || 0;
+        pageNumber++;
+      } while (allQueues.length < totalQueues);
+      
+      availableQueues = allQueues;
+    }
+
+    async function fetchAllAgents(token) {
+      let allAgents = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalAgents = 0;
+      
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/users?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetchWithProxy(url, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.message || "Failed to fetch agents");
+        
+        allAgents = allAgents.concat(data.entities || []);
+        totalAgents = data.total || 0;
+        pageNumber++;
+      } while (allAgents.length < totalAgents);
+      
+      availableAgents = allAgents;
+    }
+
+    async function fetchManagementUnits(token) {
+      const url = 'https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits';
+      const response = await fetchWithProxy(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message || "Failed to fetch management units");
+      
+      availableManagementUnits = data.entities || [];
+    }
+
+    async function fetchAgentsByManagementUnit(unitId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits/${unitId}/users`;
+      const response = await fetchWithProxy(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message || "Failed to fetch agents by management unit");
+      
+      return data.entities.map(agent => ({
+        id: agent.id,
+        name: agent.name || 'N/A'
+      }));
+    }
+
+    async function fetchAgentQueues(agentId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/users/${agentId}/routingqueues`;
+      const response = await fetchWithProxy(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message || "Failed to fetch agent queues");
+      
+      return data.entities || [];
+    }
+
+    function populateQueueDropdown() {
+      const queueDropdown = document.getElementById('queueDropdown');
+      queueDropdown.innerHTML = '<option value="">Select Queue</option>';
+      availableQueues.forEach(queue => {
+        const option = document.createElement('option');
+        option.value = queue.id;
+        option.textContent = queue.name;
+        queueDropdown.appendChild(option);
+      });
+    }
+
+    function populateAgentDropdowns() {
+      const agentDropdownForQueue = document.getElementById('agentDropdownForQueue');
+      agentDropdownForQueue.innerHTML = '<option value="">Select Agent</option>';
+      availableAgents.forEach(agent => {
+        const option = document.createElement('option');
+        option.value = agent.id;
+        option.textContent = agent.name;
+        agentDropdownForQueue.appendChild(option);
+      });
+    }
+
+    function populateManagementUnitDropdowns() {
+      const queueDropdown = document.getElementById('managementUnitDropdownForQueue');
+      queueDropdown.innerHTML = '<option value="">Select Management Unit</option>';
+      availableManagementUnits.forEach(unit => {
+        const option = document.createElement('option');
+        option.value = unit.id;
+        option.textContent = unit.name;
+        queueDropdown.appendChild(option);
+      });
+    }
+
+    function setupEventListeners(token) {
+      document.getElementById('fetchAgentsForQueue').addEventListener('click', () => fetchAgentsForQueue(token));
+      document.getElementById('updateQueues').addEventListener('click', () => updateSelectedQueues(token));
+      
+      document.getElementById('selectAllAgentsForQueue').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('#agentsTableForQueue tbody input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+      });
+    }
+
+    async function fetchAgentsForQueue(token) {
+      const queueId = document.getElementById('queueDropdown').value;
+      const agentId = document.getElementById('agentDropdownForQueue').value;
+      const managementUnitId = document.getElementById('managementUnitDropdownForQueue').value;
+
+      if (!queueId && !agentId && !managementUnitId) {
+        showError('Please select a queue, agent, or management unit first.');
+        return;
+      }
+
+      try {
+        let agents = [];
+        if (queueId) {
+          agents = await fetchAgentsByQueue(queueId, token);
+        } else if (agentId) {
+          const selectedAgent = availableAgents.find(agent => agent.id === agentId);
+          agents = selectedAgent ? [selectedAgent] : [];
+        } else if (managementUnitId) {
+          agents = await fetchAgentsByManagementUnit(managementUnitId, token);
+        }
+
+        const agentsWithQueues = await Promise.all(agents.map(async agent => {
+          const queues = await fetchAgentQueues(agent.id, token);
+          return { ...agent, queues };
+        }));
+
+        populateQueueTable(agentsWithQueues);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+        showError(`Failed to fetch agents: ${error.message}`);
+      }
+    }
+
+    async function fetchAgentsByQueue(queueId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
+      const response = await fetchWithProxy(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message || "Failed to fetch queue members");
+      
+      return data.entities.map(member => ({
+        id: member.user?.id,
+        name: member.user?.name || 'Unknown',
+        queueId: queueId,
+        queueName: data.queue?.name || 'Unknown Queue'
+      })).filter(agent => agent.id);
+    }
+
+    function populateQueueTable(agents) {
+      const tableBody = document.querySelector('#agentsTableForQueue tbody');
+      tableBody.innerHTML = "";
+
+      agents.forEach(agent => {
+        let row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input type="checkbox" data-user-id="${agent.id}"></td>
+          <td>${agent.name || 'N/A'}</td>
+          <td>${agent.queues ? agent.queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
+          <td>
+            <select data-user-id="${agent.id}">
+              <option value="">Select Queue</option>
+              ${availableQueues.map(queue => `<option value="${queue.id}">${queue.name}</option>`).join('')}
+            </select>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function updateSelectedQueues(token) {
+      const checkboxes = document.querySelectorAll('#agentsTableForQueue tbody input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        showError('Please select at least one agent to update.');
+        return;
+      }
+
+      const updates = [];
+      
+      checkboxes.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const row = checkbox.closest('tr');
+        const queueSelect = row.querySelector('select');
+        const queueId = queueSelect.value;
+        
+        if (queueId) {
+          updates.push({ userId, queueId });
+        }
+      });
+
+      if (updates.length === 0) {
+        showError('No valid updates selected. Please ensure you have selected a queue for each agent.');
+        return;
+      }
+
+      try {
+        const results = await Promise.all(updates.map(update => processQueueUpdate(update, token)));
+        console.log("Update results:", results);
+        alert('Queue updates completed successfully!');
+        fetchAgentsForQueue(token);
+      } catch (error) {
+        console.error("Error updating queues:", error);
+        showError(`Failed to update queues: ${error.message}`);
+      }
+    }
 
     async function processQueueUpdate(update, token) {
       const { userId, queueId } = update;
-      
-      // Use CORS proxy
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
       const apiUrl = `https://api.mypurecloud.ie/api/v2/users/${userId}/routingqueues/${queueId}/members`;
       
       const body = {
@@ -22,46 +484,21 @@
         }
       };
       
-      try {
-        const response = await fetch(proxyUrl + apiUrl, {
-          method: 'POST',
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest" // Required by some CORS proxies
-          },
-          body: JSON.stringify(body)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to update queue membership");
-        }
-        
-        return response.json();
-      } catch (error) {
-        console.error("API Error:", error);
-        // If proxy fails, try direct (might work for some users)
-        try {
-          const directResponse = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-          });
-          
-          if (!directResponse.ok) {
-            const errorData = await directResponse.json();
-            throw new Error(errorData.message || "Direct connection failed");
-          }
-          
-          return directResponse.json();
-        } catch (directError) {
-          throw new Error("Both proxy and direct connections failed. Please try again or contact support.");
-        }
+      const response = await fetchWithProxy(apiUrl, {
+        method: 'POST',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update queue membership");
       }
+      
+      return response.json();
     }
   </script>
 </body>
