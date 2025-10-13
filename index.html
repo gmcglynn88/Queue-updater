@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPI Queue Updates</title>
+  <title>Queue Updates</title>
   <style>
     /* Aptos font family definition */
     @font-face {
@@ -150,11 +150,28 @@
     .action-button {
       margin-top: 20px;
     }
+    .selection-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .selection-section h3 {
+      margin-top: 0;
+      color: #63AB8F;
+    }
+    .or-divider {
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      color: #666;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>IPI Queue Updates</h1>
+    <h1>Queue Updates</h1>
     <button class="logo-button" id="refreshButton">
       <img src="https://raw.githubusercontent.com/gmcglynn88/TimeoffApp/main/IPI_Primary%20Identity_Corporate_REVERSED_ECC.png" alt="Consulting Logo">
     </button>
@@ -169,14 +186,29 @@
     <div id="appContent" style="display: none;">
       <div id="messageContainer" style="display: none;"></div>
       
-      <div class="filter-container">
-        <label for="agentDropdown">Select Agents:</label>
-        <select id="agentDropdown" multiple class="multi-select">
-          <option value="">Loading agents...</option>
-        </select>
+      <div class="selection-section">
+        <h3>Select by Agents</h3>
+        <div class="filter-container">
+          <label for="agentDropdown">Select Agents:</label>
+          <select id="agentDropdown" multiple class="multi-select">
+            <option value="">Loading agents...</option>
+          </select>
+        </div>
+        <button id="fetchUserQueues">Get Agent Queues</button>
       </div>
 
-      <button id="fetchUserQueues">Get User Queues</button>
+      <div class="or-divider">OR</div>
+
+      <div class="selection-section">
+        <h3>Select by Queue</h3>
+        <div class="filter-container">
+          <label for="queueDropdown">Select Queue:</label>
+          <select id="queueDropdown">
+            <option value="">Loading queues...</option>
+          </select>
+        </div>
+        <button id="fetchQueueMembers">Get Queue Members</button>
+      </div>
 
       <table id="userQueuesTable">
         <thead>
@@ -202,6 +234,7 @@
     
     let token = null;
     let availableUsers = [];
+    let availableQueues = [];
     let selectedUsers = [];
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -236,8 +269,12 @@
     async function initializeApp(token) {
       console.log("Initializing app with token...");
       try {
-        await fetchAllUsers(token);
+        await Promise.all([
+          fetchAllUsers(token),
+          fetchAllQueues(token)
+        ]);
         populateAgentDropdown();
+        populateQueueDropdown();
         setupEventListeners(token);
       } catch (error) {
         console.error("Initialization error:", error);
@@ -275,6 +312,35 @@
       availableUsers = allUsers;
     }
 
+    async function fetchAllQueues(token) {
+      let allQueues = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalQueues = 0;
+      
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/routing/queues?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch queues");
+        }
+        
+        const data = await response.json();
+        allQueues = allQueues.concat(data.entities || []);
+        totalQueues = data.total || 0;
+        pageNumber++;
+      } while (allQueues.length < totalQueues);
+      
+      availableQueues = allQueues;
+    }
+
     function populateAgentDropdown() {
       const agentDropdown = document.getElementById('agentDropdown');
       agentDropdown.innerHTML = '';
@@ -287,8 +353,21 @@
       });
     }
 
+    function populateQueueDropdown() {
+      const queueDropdown = document.getElementById('queueDropdown');
+      queueDropdown.innerHTML = '<option value="">Select Queue</option>';
+      
+      availableQueues.forEach(queue => {
+        const option = document.createElement('option');
+        option.value = queue.id;
+        option.textContent = queue.name;
+        queueDropdown.appendChild(option);
+      });
+    }
+
     function setupEventListeners(token) {
       document.getElementById('fetchUserQueues').addEventListener('click', () => fetchUserQueues(token));
+      document.getElementById('fetchQueueMembers').addEventListener('click', () => fetchQueueMembers(token));
       document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues(token));
       
       document.getElementById('selectAllUsers').addEventListener('change', function() {
@@ -331,6 +410,65 @@
       }
     }
 
+    async function fetchQueueMembers(token) {
+      const queueId = document.getElementById('queueDropdown').value;
+      
+      if (!queueId) {
+        showMessage('Please select a queue first.');
+        return;
+      }
+
+      try {
+        const tableBody = document.querySelector('#userQueuesTable tbody');
+        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading queue members...</td></tr>';
+        
+        const queueMembers = await fetchQueueMembersForQueue(queueId, token);
+        
+        // Get full user details and their queues
+        const usersWithQueues = await Promise.all(
+          queueMembers.map(async member => {
+            const user = availableUsers.find(u => u.id === member.user.id) || member.user;
+            const queues = await fetchUserQueuesForUser(member.user.id, token);
+            return { user, queues };
+          })
+        );
+        
+        populateUserQueuesTable(usersWithQueues);
+      } catch (error) {
+        console.error("Error fetching queue members:", error);
+        showMessage(`Failed to fetch queue members: ${error.message}`);
+      }
+    }
+
+    async function fetchQueueMembersForQueue(queueId, token) {
+      let allMembers = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalMembers = 0;
+      
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Failed to fetch members for queue ${queueId}`);
+        }
+        
+        const data = await response.json();
+        allMembers = allMembers.concat(data.entities || []);
+        totalMembers = data.total || 0;
+        pageNumber++;
+      } while (allMembers.length < totalMembers);
+      
+      return allMembers;
+    }
+
     async function fetchUserQueuesForUser(userId, token) {
       const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/queues`;
       const response = await fetch(url, {
@@ -354,7 +492,7 @@
       tableBody.innerHTML = "";
 
       if (usersWithQueues.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4">No users selected or no queues found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
         return;
       }
 
@@ -452,8 +590,13 @@
           showMessage('All queue removals completed successfully!', 'success');
         }
         
-        // Refresh the table
-        await fetchUserQueues(token);
+        // Refresh the table based on current selection method
+        const queueId = document.getElementById('queueDropdown').value;
+        if (queueId) {
+          await fetchQueueMembers(token);
+        } else {
+          await fetchUserQueues(token);
+        }
         
       } catch (error) {
         console.error("Error removing queues:", error);
