@@ -906,13 +906,14 @@
     }
 
     async function addQueueToUser(userId, queueId, token) {
-      // Correct endpoint for adding a queue to a user
-      const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/queues`;
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
       
-      const body = {
-        id: queueId,
-        name: availableQueues.find(q => q.id === queueId)?.name || 'Unknown Queue'
-      };
+      // Correct body structure - array of member objects with just id
+      const body = [
+        {
+          id: userId
+        }
+      ];
       
       console.log('Adding user to queue - URL:', url);
       console.log('Adding user to queue - Body:', body);
