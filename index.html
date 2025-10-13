@@ -833,10 +833,14 @@
       const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
       const operations = [];
       
+      console.log('Add queues - checked users:', checkedUsers.length);
+      
       checkedUsers.forEach(checkbox => {
         const userId = checkbox.getAttribute('data-user-id');
         const queueSelect = document.querySelector(`.queue-select-add[data-user-id="${userId}"]`);
         const queueId = queueSelect ? queueSelect.value : null;
+        
+        console.log('Add queues - user:', userId, 'queue:', queueId);
         
         if (queueId) {
           operations.push({ userId, queueId });
@@ -844,9 +848,11 @@
       });
       
       if (operations.length === 0) {
-        showMessage('No valid operations to perform.');
+        showMessage('No valid operations to perform. Please ensure you have selected both users and queues to add.');
         return;
       }
+      
+      console.log('Add queues - operations to perform:', operations);
       
       try {
         const addButton = document.getElementById('addQueues');
@@ -857,10 +863,13 @@
           operations.map(op => addQueueToUser(op.userId, op.queueId, token))
         );
         
+        console.log('Add queues - results:', results);
+        
         const failures = results.filter(result => result.status === 'rejected');
         if (failures.length > 0) {
           console.error("Some operations failed:", failures);
-          showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
+          const errorMessages = failures.map(f => f.reason?.message || 'Unknown error').join(', ');
+          showMessage(`Completed with ${failures.length} error(s): ${errorMessages}`);
         } else {
           showMessage('All queue additions completed successfully!', 'success');
         }
@@ -898,10 +907,18 @@
 
     async function addQueueToUser(userId, queueId, token) {
       const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
+      
+      // Correct body structure for adding queue members
       const body = {
-        id: userId,
-        name: availableUsers.find(u => u.id === userId)?.name || 'Unknown User'
+        member: {
+          id: userId,
+          name: availableUsers.find(u => u.id === userId)?.name || 'Unknown User',
+          type: "USER"  // Important: specify the member type
+        }
       };
+      
+      console.log('Adding user to queue - URL:', url);
+      console.log('Adding user to queue - Body:', body);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -914,6 +931,7 @@
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Add queue error response:', errorData);
         throw new Error(errorData.message || `Failed to add queue ${queueId} to user ${userId}`);
       }
       
