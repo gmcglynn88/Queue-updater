@@ -378,36 +378,67 @@
         
         const queueMembers = await fetchQueueMembersForQueue(queueId, token);
         
+        console.log('Raw queue members:', queueMembers);
+        
         // Get full user details and ALL their queues (not just the selected queue)
         const usersWithQueues = await Promise.all(
-          queueMembers.map(async member => {
-            // The queue members API returns user objects with id and name properties
-            // The structure is: member.user.id and member.user.name
-            const userId = member.user?.id;
-            if (!userId) {
-              console.warn('Member without user ID:', member);
+          queueMembers.map(async (member) => {
+            try {
+              // The queue members API returns user objects with id and name properties
+              // The structure is: member.user.id and member.user.name
+              const userId = member.user?.id;
+              const userName = member.user?.name;
+              
+              if (!userId) {
+                console.warn('Member without user ID:', member);
+                return null;
+              }
+              
+              // Skip users with no name or obviously invalid names
+              if (!userName || userName === 'Unknown User' || userName.trim() === '') {
+                console.warn('Skipping user with invalid name:', member);
+                return null;
+              }
+              
+              // Try to find the user in our availableUsers first for complete info
+              let user = availableUsers.find(u => u.id === userId);
+              
+              // If not found in availableUsers, create a basic user object from the member data
+              if (!user) {
+                user = {
+                  id: userId,
+                  name: userName,
+                  email: member.user?.email || ''
+                };
+              }
+              
+              // Fetch ALL queues for this user
+              const queues = await fetchUserQueuesForUser(userId, token);
+              console.log(`User ${userName} queues:`, queues);
+              
+              return { user, queues };
+            } catch (error) {
+              console.error(`Error processing member ${member.user?.id}:`, error);
               return null;
             }
-            
-            // Try to find the user in our availableUsers first for complete info
-            let user = availableUsers.find(u => u.id === userId);
-            
-            // If not found in availableUsers, create a basic user object from the member data
-            if (!user) {
-              user = {
-                id: userId,
-                name: member.user?.name || 'Unknown User'
-              };
-            }
-            
-            // Fetch ALL queues for this user
-            const queues = await fetchUserQueuesForUser(userId, token);
-            return { user, queues };
           })
         );
         
-        // Filter out any null results
-        const validUsers = usersWithQueues.filter(user => user !== null);
+        // Filter out any null results and users with no queues (if you want to hide them)
+        const validUsers = usersWithQueues.filter(user => 
+          user !== null && 
+          user.user && 
+          user.user.name && 
+          user.user.name !== 'Unknown User' &&
+          user.user.name.trim() !== ''
+        );
+        
+        console.log('Valid users with queues:', validUsers);
+        
+        if (validUsers.length === 0) {
+          showMessage('No users with valid queue assignments found for this queue.');
+        }
+        
         populateUserQueuesTable(validUsers);
       } catch (error) {
         console.error("Error fetching queue members:", error);
