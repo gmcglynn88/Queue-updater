@@ -10,7 +10,7 @@
       --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
       --pill:#e9f6f0;
     }
-    body{font-family:'Segoe UI',Arial,sans-serif;margin:20px;padding:20px;max-width:1200px;background:var(--light-bg);color:var(--text-color)}
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:20px;padding:20px;max-width:1400px;background:var(--light-bg);color:var(--text-color)}
     #logo-container{text-align:center;margin-bottom:20px} #logo{width:300px}
     h1{margin:0 0 16px}
     .card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:24px;margin-top:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
@@ -18,7 +18,7 @@
     select,input,button{padding:10px;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);font-size:14px}
     button{background:var(--primary-color);color:#fff;font-weight:600;cursor:pointer;transition:background .2s}
     button:hover{background:var(--secondary-color)} button:disabled{background:var(--text-light);cursor:not-allowed}
-    .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px 24px;align-items:start}
+    .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;align-items:end}
     .inline{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center} .inline span{color:var(--text-light)}
     .full-width-btn{width:100%;padding:14px 18px;font-size:16px;margin-top:12px}
     .muted{color:var(--text-light)} .mono{font-family:ui-monospace,Consolas,Menlo,monospace}
@@ -119,6 +119,32 @@
       border-radius: 4px;
       background-color: #dff0d8;
     }
+    .tab-container {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-right: 4px;
+      background: var(--light-bg);
+      transition: background 0.2s;
+    }
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -134,49 +160,105 @@
   <div id="appContent" style="display: none;">
     <div id="messageContainer" style="display: none;"></div>
     
-    <div class="selection-section">
-      <h3>Select by Agents</h3>
-      <div class="controls">
-        <div>
-          <label for="agentDropdown">Select Agents</label>
-          <select id="agentDropdown" multiple class="multi-select">
-            <option value="">Loading agents...</option>
-          </select>
-        </div>
-      </div>
-      <button id="fetchUserQueues" class="full-width-btn">Get Agent Queues</button>
+    <div class="tab-container">
+      <div class="tab active" data-tab="remove">Remove Queues</div>
+      <div class="tab" data-tab="add">Add Queues</div>
     </div>
 
-    <div class="or-divider">OR</div>
-
-    <div class="selection-section">
-      <h3>Select by Queue</h3>
-      <div class="controls">
-        <div>
-          <label for="queueDropdown">Select Queue</label>
-          <select id="queueDropdown">
-            <option value="">Loading queues...</option>
-          </select>
+    <!-- Remove Queues Tab -->
+    <div id="removeTab" class="tab-content active">
+      <div class="selection-section">
+        <h3>Search Options</h3>
+        <div class="controls">
+          <div>
+            <label for="agentDropdownRemove">Select Agents</label>
+            <select id="agentDropdownRemove" multiple class="multi-select">
+              <option value="">Loading agents...</option>
+            </select>
+          </div>
+          <div>
+            <label for="queueDropdownRemove">Select Queue</label>
+            <select id="queueDropdownRemove">
+              <option value="">Select Queue</option>
+            </select>
+          </div>
+          <div>
+            <label for="teamDropdownRemove">Select Work Team</label>
+            <select id="teamDropdownRemove">
+              <option value="">Select Team</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersRemove" class="full-width-btn">Get Users</button>
+          </div>
         </div>
       </div>
-      <button id="fetchQueueMembers" class="full-width-btn">Get Queue Members</button>
+
+      <div class="card">
+        <h2 style="margin: 0 0 12px;">Queue Assignments - Remove</h2>
+        <table id="userQueuesTableRemove">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllUsersRemove" class="select-all-checkbox"></th>
+              <th>Agent</th>
+              <th>Queues Assigned</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button id="removeQueues" class="full-width-btn action-button" disabled>Remove Selected Queues from Selected Users</button>
+      </div>
     </div>
 
-    <div class="card">
-      <h2 style="margin: 0 0 12px;">Queue Assignments</h2>
-      <table id="userQueuesTable">
-        <thead>
-          <tr>
-            <th><input type="checkbox" id="selectAllUsers" class="select-all-checkbox"></th>
-            <th>Agent</th>
-            <th>Queues Assigned</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <!-- Add Queues Tab -->
+    <div id="addTab" class="tab-content">
+      <div class="selection-section">
+        <h3>Search Options</h3>
+        <div class="controls">
+          <div>
+            <label for="agentDropdownAdd">Select Agents</label>
+            <select id="agentDropdownAdd" multiple class="multi-select">
+              <option value="">Loading agents...</option>
+            </select>
+          </div>
+          <div>
+            <label for="queueDropdownAdd">Select Queue</label>
+            <select id="queueDropdownAdd">
+              <option value="">Select Queue</option>
+            </select>
+          </div>
+          <div>
+            <label for="teamDropdownAdd">Select Work Team</label>
+            <select id="teamDropdownAdd">
+              <option value="">Select Team</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersAdd" class="full-width-btn">Get Users</button>
+          </div>
+        </div>
+      </div>
 
-      <button id="removeQueues" class="full-width-btn action-button" disabled>Remove Selected Queues from Selected Users</button>
+      <div class="card">
+        <h2 style="margin: 0 0 12px;">Queue Assignments - Add</h2>
+        <table id="userQueuesTableAdd">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllUsersAdd" class="select-all-checkbox"></th>
+              <th>Agent</th>
+              <th>Queues Assigned</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button id="addQueues" class="full-width-btn action-button" disabled>Add Selected Queues to Selected Users</button>
+      </div>
     </div>
   </div>
 
@@ -189,6 +271,7 @@
     let token = null;
     let availableUsers = [];
     let availableQueues = [];
+    let availableTeams = [];
     let selectedUsers = [];
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -225,10 +308,10 @@
       try {
         await Promise.all([
           fetchAllUsers(token),
-          fetchAllQueues(token)
+          fetchAllQueues(token),
+          fetchAllTeams(token)
         ]);
-        populateAgentDropdown();
-        populateQueueDropdown();
+        populateDropdowns();
         setupEventListeners(token);
       } catch (error) {
         console.error("Initialization error:", error);
@@ -296,8 +379,49 @@
       availableQueues = allQueues;
     }
 
-    function populateAgentDropdown() {
-      const agentDropdown = document.getElementById('agentDropdown');
+    async function fetchAllTeams(token) {
+      let allTeams = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalTeams = 0;
+      
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/teams?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch teams");
+        }
+        
+        const data = await response.json();
+        allTeams = allTeams.concat(data.entities || []);
+        totalTeams = data.total || 0;
+        pageNumber++;
+      } while (allTeams.length < totalTeams);
+      
+      availableTeams = allTeams;
+    }
+
+    function populateDropdowns() {
+      // Remove tab dropdowns
+      populateAgentDropdown('agentDropdownRemove');
+      populateQueueDropdown('queueDropdownRemove');
+      populateTeamDropdown('teamDropdownRemove');
+      
+      // Add tab dropdowns
+      populateAgentDropdown('agentDropdownAdd');
+      populateQueueDropdown('queueDropdownAdd');
+      populateTeamDropdown('teamDropdownAdd');
+    }
+
+    function populateAgentDropdown(dropdownId) {
+      const agentDropdown = document.getElementById(dropdownId);
       agentDropdown.innerHTML = '';
       
       // Only show users with valid names
@@ -313,8 +437,8 @@
       });
     }
 
-    function populateQueueDropdown() {
-      const queueDropdown = document.getElementById('queueDropdown');
+    function populateQueueDropdown(dropdownId) {
+      const queueDropdown = document.getElementById(dropdownId);
       queueDropdown.innerHTML = '<option value="">Select Queue</option>';
       
       availableQueues.forEach(queue => {
@@ -325,136 +449,150 @@
       });
     }
 
-    function setupEventListeners(token) {
-      document.getElementById('fetchUserQueues').addEventListener('click', () => fetchUserQueues(token));
-      document.getElementById('fetchQueueMembers').addEventListener('click', () => fetchQueueMembers(token));
-      document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues(token));
+    function populateTeamDropdown(dropdownId) {
+      const teamDropdown = document.getElementById(dropdownId);
+      teamDropdown.innerHTML = '<option value="">Select Team</option>';
       
-      document.getElementById('selectAllUsers').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('#userQueuesTable tbody input[type="checkbox"]');
+      availableTeams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name;
+        teamDropdown.appendChild(option);
+      });
+    }
+
+    function setupEventListeners(token) {
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+        });
+      });
+
+      // Remove tab listeners
+      document.getElementById('fetchUsersRemove').addEventListener('click', () => fetchUsers('remove', token));
+      document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues(token));
+      document.getElementById('selectAllUsersRemove').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('#userQueuesTableRemove tbody input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
           checkbox.checked = this.checked;
         });
         updateRemoveButtonState();
       });
-      
-      document.getElementById('agentDropdown').addEventListener('change', function() {
-        selectedUsers = Array.from(this.selectedOptions).map(option => option.value);
+
+      // Add tab listeners
+      document.getElementById('fetchUsersAdd').addEventListener('click', () => fetchUsers('add', token));
+      document.getElementById('addQueues').addEventListener('click', () => addSelectedQueues(token));
+      document.getElementById('selectAllUsersAdd').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('#userQueuesTableAdd tbody input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+        updateAddButtonState();
       });
     }
 
-    async function fetchUserQueues(token) {
-      const selectedUserIds = Array.from(document.getElementById('agentDropdown').selectedOptions).map(option => option.value);
-      
-      if (selectedUserIds.length === 0) {
-        showMessage('Please select at least one agent first.');
+    async function fetchUsers(mode, token) {
+      const agentIds = Array.from(document.getElementById(`agentDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).selectedOptions).map(option => option.value);
+      const queueId = document.getElementById(`queueDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).value;
+      const teamId = document.getElementById(`teamDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).value;
+
+      if (agentIds.length === 0 && !queueId && !teamId) {
+        showMessage('Please select at least one search option.');
         return;
       }
 
       try {
-        const tableBody = document.querySelector('#userQueuesTable tbody');
-        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading user queues...</td></tr>';
+        const tableBody = document.querySelector(`#userQueuesTable${mode.charAt(0).toUpperCase() + mode.slice(1)} tbody`);
+        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading users...</td></tr>';
         
+        let users = [];
+
+        if (agentIds.length > 0) {
+          // Get selected agents
+          users = agentIds.map(userId => availableUsers.find(u => u.id === userId)).filter(user => user);
+        } else if (queueId) {
+          // Get users from queue
+          const queueMembers = await fetchQueueMembersForQueue(queueId, token);
+          users = await processQueueMembers(queueMembers);
+        } else if (teamId) {
+          // Get users from team
+          const teamMembers = await fetchTeamMembers(teamId, token);
+          users = await processTeamMembers(teamMembers);
+        }
+
+        if (users.length === 0) {
+          showMessage('No users found for the selected criteria.');
+          return;
+        }
+
+        // Get queues for each user
         const usersWithQueues = await Promise.all(
-          selectedUserIds.map(async userId => {
-            const user = availableUsers.find(u => u.id === userId);
-            const queues = await fetchUserQueuesForUser(userId, token);
+          users.map(async (user) => {
+            const queues = await fetchUserQueuesForUser(user.id, token);
             return { user, queues };
           })
         );
-        
-        populateUserQueuesTable(usersWithQueues);
+
+        if (mode === 'remove') {
+          populateRemoveTable(usersWithQueues);
+        } else {
+          populateAddTable(usersWithQueues);
+        }
+
       } catch (error) {
-        console.error("Error fetching user queues:", error);
-        showMessage(`Failed to fetch user queues: ${error.message}`);
+        console.error("Error fetching users:", error);
+        showMessage(`Failed to fetch users: ${error.message}`);
       }
     }
 
-    async function fetchQueueMembers(token) {
-      const queueId = document.getElementById('queueDropdown').value;
-      
-      if (!queueId) {
-        showMessage('Please select a queue first.');
-        return;
-      }
-
-      try {
-        const tableBody = document.querySelector('#userQueuesTable tbody');
-        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading queue members...</td></tr>';
+    async function processQueueMembers(queueMembers) {
+      const users = [];
+      for (const member of queueMembers) {
+        const userId = member.user?.id;
+        if (!userId) continue;
         
-        const queueMembers = await fetchQueueMembersForQueue(queueId, token);
-        
-        console.log('Raw queue members:', queueMembers);
-        console.log('Available users count:', availableUsers.length);
-        
-        // Get full user details and ALL their queues (not just the selected queue)
-        const usersWithQueues = await Promise.all(
-          queueMembers.map(async (member) => {
-            try {
-              // The queue members API returns user objects with id and name properties
-              const userId = member.user?.id;
-              const userName = member.user?.name;
-              
-              if (!userId) {
-                console.warn('Member without user ID:', member);
-                return null;
-              }
-              
-              // Try to find the user in our availableUsers - this is the key fix!
-              const user = availableUsers.find(u => u.id === userId);
-              
-              // If user is not found in availableUsers, they are likely deleted/inactive - skip them
-              if (!user) {
-                console.warn(`Skipping deleted/inactive user: ${userId} - ${userName}`);
-                return null;
-              }
-              
-              // Additional validation for active users
-              if (!user.name || user.name.trim() === '' || user.name === 'Unknown User') {
-                console.warn(`Skipping user with invalid name: ${userId} - ${user.name}`);
-                return null;
-              }
-              
-              // Check if user is likely inactive (you might need to adjust these checks based on your org)
-              if (user.state && user.state !== 'active') {
-                console.warn(`Skipping inactive user: ${userId} - ${user.name} (state: ${user.state})`);
-                return null;
-              }
-              
-              // Fetch ALL queues for this user
-              const queues = await fetchUserQueuesForUser(userId, token);
-              console.log(`Active user ${user.name} queues:`, queues.length);
-              
-              return { user, queues };
-            } catch (error) {
-              console.error(`Error processing member ${member.user?.id}:`, error);
-              return null;
-            }
-          })
-        );
-        
-        // Filter out any null results
-        const validUsers = usersWithQueues.filter(user => user !== null);
-        
-        console.log('Valid active users with queues:', validUsers.length);
-        console.log('Valid users:', validUsers);
-        
-        if (validUsers.length === 0) {
-          showMessage('No active users found for this queue.');
-        } else {
-          showMessage(`Found ${validUsers.length} active users for this queue.`, 'success');
-          // Auto-hide success message after 3 seconds
-          setTimeout(() => {
-            const messageContainer = document.getElementById('messageContainer');
-            if (messageContainer) messageContainer.style.display = 'none';
-          }, 3000);
+        const user = availableUsers.find(u => u.id === userId);
+        if (user && user.name && user.name.trim() !== '' && user.name !== 'Unknown User') {
+          users.push(user);
         }
-        
-        populateUserQueuesTable(validUsers);
-      } catch (error) {
-        console.error("Error fetching queue members:", error);
-        showMessage(`Failed to fetch queue members: ${error.message}`);
       }
+      return users;
+    }
+
+    async function fetchTeamMembers(teamId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/teams/${teamId}/members`;
+      const response = await fetch(url, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch members for team ${teamId}`);
+      }
+      
+      const data = await response.json();
+      return data.entities || [];
+    }
+
+    async function processTeamMembers(teamMembers) {
+      const users = [];
+      for (const member of teamMembers) {
+        const userId = member.id;
+        if (!userId) continue;
+        
+        const user = availableUsers.find(u => u.id === userId);
+        if (user && user.name && user.name.trim() !== '' && user.name !== 'Unknown User') {
+          users.push(user);
+        }
+      }
+      return users;
     }
 
     async function fetchQueueMembersForQueue(queueId, token) {
@@ -478,8 +616,6 @@
         }
         
         const data = await response.json();
-        
-        // The queue members API returns entities array with user objects
         allMembers = allMembers.concat(data.entities || []);
         totalMembers = data.total || 0;
         pageNumber++;
@@ -499,9 +635,7 @@
         });
         
         if (!response.ok) {
-          // If we get a 404 or other error, return empty array instead of throwing
           if (response.status === 404) {
-            console.warn(`User ${userId} not found or has no queues`);
             return [];
           }
           const errorData = await response.json();
@@ -516,19 +650,19 @@
       }
     }
 
-    function populateUserQueuesTable(usersWithQueues) {
-      const tableBody = document.querySelector('#userQueuesTable tbody');
+    function populateRemoveTable(usersWithQueues) {
+      const tableBody = document.querySelector('#userQueuesTableRemove tbody');
       tableBody.innerHTML = "";
 
       if (usersWithQueues.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4">No active users found for this queue.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
         return;
       }
 
       usersWithQueues.forEach(({ user, queues }) => {
         const row = document.createElement("tr");
         
-        // Create queue selection dropdown - include ALL queues the user has
+        // Create queue selection dropdown - only show queues the user currently has
         let queueOptions = '<option value="">Select Queue to Remove</option>';
         if (queues.length > 0) {
           queues.forEach(queue => {
@@ -539,11 +673,11 @@
         }
         
         row.innerHTML = `
-          <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox"></td>
+          <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox-remove"></td>
           <td>${user.name}</td>
           <td>${queues.length > 0 ? queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
           <td>
-            <select data-user-id="${user.id}" class="queue-select" ${queues.length === 0 ? 'disabled' : ''}>
+            <select data-user-id="${user.id}" class="queue-select-remove" ${queues.length === 0 ? 'disabled' : ''}>
               ${queueOptions}
             </select>
           </td>
@@ -551,26 +685,77 @@
         tableBody.appendChild(row);
       });
       
-      // Add event listeners to checkboxes and dropdowns
-      document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+      // Add event listeners
+      document.querySelectorAll('.user-checkbox-remove').forEach(checkbox => {
         checkbox.addEventListener('change', updateRemoveButtonState);
       });
       
-      document.querySelectorAll('.queue-select').forEach(select => {
+      document.querySelectorAll('.queue-select-remove').forEach(select => {
         select.addEventListener('change', updateRemoveButtonState);
       });
       
       updateRemoveButtonState();
     }
 
+    function populateAddTable(usersWithQueues) {
+      const tableBody = document.querySelector('#userQueuesTableAdd tbody');
+      tableBody.innerHTML = "";
+
+      if (usersWithQueues.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        return;
+      }
+
+      usersWithQueues.forEach(({ user, queues }) => {
+        const row = document.createElement("tr");
+        
+        // Get queues NOT assigned to the user
+        const assignedQueueIds = queues.map(q => q.id);
+        const availableQueuesForUser = availableQueues.filter(queue => !assignedQueueIds.includes(queue.id));
+        
+        // Create queue selection dropdown - only show queues the user doesn't have
+        let queueOptions = '<option value="">Select Queue to Add</option>';
+        if (availableQueuesForUser.length > 0) {
+          availableQueuesForUser.forEach(queue => {
+            queueOptions += `<option value="${queue.id}">${queue.name}</option>`;
+          });
+        } else {
+          queueOptions = '<option value="">All Queues Assigned</option>';
+        }
+        
+        row.innerHTML = `
+          <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox-add"></td>
+          <td>${user.name}</td>
+          <td>${queues.length > 0 ? queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
+          <td>
+            <select data-user-id="${user.id}" class="queue-select-add" ${availableQueuesForUser.length === 0 ? 'disabled' : ''}>
+              ${queueOptions}
+            </select>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+      
+      // Add event listeners
+      document.querySelectorAll('.user-checkbox-add').forEach(checkbox => {
+        checkbox.addEventListener('change', updateAddButtonState);
+      });
+      
+      document.querySelectorAll('.queue-select-add').forEach(select => {
+        select.addEventListener('change', updateAddButtonState);
+      });
+      
+      updateAddButtonState();
+    }
+
     function updateRemoveButtonState() {
       const removeButton = document.getElementById('removeQueues');
-      const checkedUsers = document.querySelectorAll('.user-checkbox:checked');
+      const checkedUsers = document.querySelectorAll('.user-checkbox-remove:checked');
       let hasSelectedQueues = false;
       
       checkedUsers.forEach(checkbox => {
         const userId = checkbox.getAttribute('data-user-id');
-        const queueSelect = document.querySelector(`.queue-select[data-user-id="${userId}"]`);
+        const queueSelect = document.querySelector(`.queue-select-remove[data-user-id="${userId}"]`);
         if (queueSelect && queueSelect.value) {
           hasSelectedQueues = true;
         }
@@ -579,14 +764,29 @@
       removeButton.disabled = !(checkedUsers.length > 0 && hasSelectedQueues);
     }
 
-    async function removeSelectedQueues(token) {
-      const checkedUsers = document.querySelectorAll('.user-checkbox:checked');
-      const operations = [];
+    function updateAddButtonState() {
+      const addButton = document.getElementById('addQueues');
+      const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
+      let hasSelectedQueues = false;
       
-      // Collect all remove operations
       checkedUsers.forEach(checkbox => {
         const userId = checkbox.getAttribute('data-user-id');
-        const queueSelect = document.querySelector(`.queue-select[data-user-id="${userId}"]`);
+        const queueSelect = document.querySelector(`.queue-select-add[data-user-id="${userId}"]`);
+        if (queueSelect && queueSelect.value) {
+          hasSelectedQueues = true;
+        }
+      });
+      
+      addButton.disabled = !(checkedUsers.length > 0 && hasSelectedQueues);
+    }
+
+    async function removeSelectedQueues(token) {
+      const checkedUsers = document.querySelectorAll('.user-checkbox-remove:checked');
+      const operations = [];
+      
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-remove[data-user-id="${userId}"]`);
         const queueId = queueSelect ? queueSelect.value : null;
         
         if (queueId) {
@@ -595,22 +795,19 @@
       });
       
       if (operations.length === 0) {
-        showMessage('No valid operations to perform. Please ensure you have selected both users and queues to remove.');
+        showMessage('No valid operations to perform.');
         return;
       }
       
       try {
-        // Disable button during operation
         const removeButton = document.getElementById('removeQueues');
         removeButton.disabled = true;
         removeButton.textContent = 'Processing...';
         
-        // Perform all remove operations
         const results = await Promise.allSettled(
           operations.map(op => removeQueueFromUser(op.userId, op.queueId, token))
         );
         
-        // Check for any failures
         const failures = results.filter(result => result.status === 'rejected');
         if (failures.length > 0) {
           console.error("Some operations failed:", failures);
@@ -619,27 +816,69 @@
           showMessage('All queue removals completed successfully!', 'success');
         }
         
-        // Refresh the table based on current selection method
-        const queueId = document.getElementById('queueDropdown').value;
-        if (queueId) {
-          await fetchQueueMembers(token);
-        } else {
-          await fetchUserQueues(token);
-        }
+        // Refresh the current view
+        await fetchUsers('remove', token);
         
       } catch (error) {
         console.error("Error removing queues:", error);
         showMessage(`Failed to remove queues: ${error.message}`);
       } finally {
-        // Re-enable button
         const removeButton = document.getElementById('removeQueues');
         removeButton.disabled = false;
         removeButton.textContent = 'Remove Selected Queues from Selected Users';
       }
     }
 
+    async function addSelectedQueues(token) {
+      const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
+      const operations = [];
+      
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-add[data-user-id="${userId}"]`);
+        const queueId = queueSelect ? queueSelect.value : null;
+        
+        if (queueId) {
+          operations.push({ userId, queueId });
+        }
+      });
+      
+      if (operations.length === 0) {
+        showMessage('No valid operations to perform.');
+        return;
+      }
+      
+      try {
+        const addButton = document.getElementById('addQueues');
+        addButton.disabled = true;
+        addButton.textContent = 'Processing...';
+        
+        const results = await Promise.allSettled(
+          operations.map(op => addQueueToUser(op.userId, op.queueId, token))
+        );
+        
+        const failures = results.filter(result => result.status === 'rejected');
+        if (failures.length > 0) {
+          console.error("Some operations failed:", failures);
+          showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
+        } else {
+          showMessage('All queue additions completed successfully!', 'success');
+        }
+        
+        // Refresh the current view
+        await fetchUsers('add', token);
+        
+      } catch (error) {
+        console.error("Error adding queues:", error);
+        showMessage(`Failed to add queues: ${error.message}`);
+      } finally {
+        const addButton = document.getElementById('addQueues');
+        addButton.disabled = false;
+        addButton.textContent = 'Add Selected Queues to Selected Users';
+      }
+    }
+
     async function removeQueueFromUser(userId, queueId, token) {
-      // According to the API documentation, memberId is userId for this endpoint
       const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`;
       const response = await fetch(url, {
         method: 'DELETE',
@@ -652,6 +891,30 @@
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to remove queue ${queueId} from user ${userId}`);
+      }
+      
+      return { userId, queueId, success: true };
+    }
+
+    async function addQueueToUser(userId, queueId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
+      const body = {
+        id: userId,
+        name: availableUsers.find(u => u.id === userId)?.name || 'Unknown User'
+      };
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to add queue ${queueId} to user ${userId}`);
       }
       
       return { userId, queueId, success: true };
