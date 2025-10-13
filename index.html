@@ -264,6 +264,7 @@
       } while (allUsers.length < totalUsers);
       
       availableUsers = allUsers;
+      console.log(`Loaded ${availableUsers.length} users from API`);
     }
 
     async function fetchAllQueues(token) {
@@ -299,7 +300,12 @@
       const agentDropdown = document.getElementById('agentDropdown');
       agentDropdown.innerHTML = '';
       
-      availableUsers.forEach(user => {
+      // Only show users with valid names
+      const validUsers = availableUsers.filter(user => 
+        user.name && user.name.trim() !== '' && user.name !== 'Unknown User'
+      );
+      
+      validUsers.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
         option.textContent = user.name || user.email || 'Unknown User';
@@ -379,13 +385,13 @@
         const queueMembers = await fetchQueueMembersForQueue(queueId, token);
         
         console.log('Raw queue members:', queueMembers);
+        console.log('Available users count:', availableUsers.length);
         
         // Get full user details and ALL their queues (not just the selected queue)
         const usersWithQueues = await Promise.all(
           queueMembers.map(async (member) => {
             try {
               // The queue members API returns user objects with id and name properties
-              // The structure is: member.user.id and member.user.name
               const userId = member.user?.id;
               const userName = member.user?.name;
               
@@ -394,27 +400,30 @@
                 return null;
               }
               
-              // Skip users with no name or obviously invalid names
-              if (!userName || userName === 'Unknown User' || userName.trim() === '') {
-                console.warn('Skipping user with invalid name:', member);
+              // Try to find the user in our availableUsers - this is the key fix!
+              const user = availableUsers.find(u => u.id === userId);
+              
+              // If user is not found in availableUsers, they are likely deleted/inactive - skip them
+              if (!user) {
+                console.warn(`Skipping deleted/inactive user: ${userId} - ${userName}`);
                 return null;
               }
               
-              // Try to find the user in our availableUsers first for complete info
-              let user = availableUsers.find(u => u.id === userId);
+              // Additional validation for active users
+              if (!user.name || user.name.trim() === '' || user.name === 'Unknown User') {
+                console.warn(`Skipping user with invalid name: ${userId} - ${user.name}`);
+                return null;
+              }
               
-              // If not found in availableUsers, create a basic user object from the member data
-              if (!user) {
-                user = {
-                  id: userId,
-                  name: userName,
-                  email: member.user?.email || ''
-                };
+              // Check if user is likely inactive (you might need to adjust these checks based on your org)
+              if (user.state && user.state !== 'active') {
+                console.warn(`Skipping inactive user: ${userId} - ${user.name} (state: ${user.state})`);
+                return null;
               }
               
               // Fetch ALL queues for this user
               const queues = await fetchUserQueuesForUser(userId, token);
-              console.log(`User ${userName} queues:`, queues);
+              console.log(`Active user ${user.name} queues:`, queues.length);
               
               return { user, queues };
             } catch (error) {
@@ -424,19 +433,21 @@
           })
         );
         
-        // Filter out any null results and users with no queues (if you want to hide them)
-        const validUsers = usersWithQueues.filter(user => 
-          user !== null && 
-          user.user && 
-          user.user.name && 
-          user.user.name !== 'Unknown User' &&
-          user.user.name.trim() !== ''
-        );
+        // Filter out any null results
+        const validUsers = usersWithQueues.filter(user => user !== null);
         
-        console.log('Valid users with queues:', validUsers);
+        console.log('Valid active users with queues:', validUsers.length);
+        console.log('Valid users:', validUsers);
         
         if (validUsers.length === 0) {
-          showMessage('No users with valid queue assignments found for this queue.');
+          showMessage('No active users found for this queue.');
+        } else {
+          showMessage(`Found ${validUsers.length} active users for this queue.`, 'success');
+          // Auto-hide success message after 3 seconds
+          setTimeout(() => {
+            const messageContainer = document.getElementById('messageContainer');
+            if (messageContainer) messageContainer.style.display = 'none';
+          }, 3000);
         }
         
         populateUserQueuesTable(validUsers);
@@ -467,9 +478,6 @@
         }
         
         const data = await response.json();
-        
-        // Log the API response to debug the structure
-        console.log('Queue members API response:', data);
         
         // The queue members API returns entities array with user objects
         allMembers = allMembers.concat(data.entities || []);
@@ -513,7 +521,7 @@
       tableBody.innerHTML = "";
 
       if (usersWithQueues.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4">No active users found for this queue.</td></tr>';
         return;
       }
 
@@ -532,7 +540,7 @@
         
         row.innerHTML = `
           <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox"></td>
-          <td>${user.name || user.email || 'Unknown User'}</td>
+          <td>${user.name}</td>
           <td>${queues.length > 0 ? queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
           <td>
             <select data-user-id="${user.id}" class="queue-select" ${queues.length === 0 ? 'disabled' : ''}>
