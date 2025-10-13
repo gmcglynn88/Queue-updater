@@ -1,1108 +1,941 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Management System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1400px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        header {
-            background: linear-gradient(90deg, #2c3e50, #4a6491);
-            color: white;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo i {
-            color: #3498db;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #3498db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eaeaea;
-        }
-        
-        .tab {
-            padding: 15px 30px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #7f8c8d;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .tab.active {
-            color: #3498db;
-            border-bottom: 3px solid #3498db;
-            background: white;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 25px;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .search-section {
-            padding: 20px 0;
-            background: #f8f9fa;
-            border-bottom: 1px solid #eaeaea;
-        }
-        
-        .search-title {
-            font-size: 22px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .search-title i {
-            color: #3498db;
-        }
-        
-        .search-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-        }
-        
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .control-label {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 14px;
-        }
-        
-        .dropdown {
-            position: relative;
-        }
-        
-        .dropdown-toggle {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .dropdown-toggle:hover {
-            border-color: #3498db;
-        }
-        
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            max-height: 250px;
-            overflow-y: auto;
-            display: none;
-            margin-top: 5px;
-        }
-        
-        .dropdown-item {
-            padding: 12px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .dropdown-item:hover {
-            background: #f1f8ff;
-        }
-        
-        .dropdown-item input {
-            margin: 0;
-        }
-        
-        .search-button {
-            background: linear-gradient(90deg, #3498db, #2c3e50);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 25px;
-        }
-        
-        .search-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .results-section {
-            padding: 25px 0;
-        }
-        
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .results-title {
-            font-size: 20px;
-            color: #2c3e50;
-        }
-        
-        .results-count {
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        thead {
-            background: #f8f9fa;
-        }
-        
-        th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 2px solid #eaeaea;
-        }
-        
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eaeaea;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: #3498db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        
-        .user-cell {
-            display: flex;
-            align-items: center;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
-        .btn-success {
-            background: #27ae60;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #219653;
-        }
-        
-        .queue-selector {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .queue-selector-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .queue-selector-title {
-            font-size: 18px;
-            color: #2c3e50;
-        }
-        
-        .queue-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #eaeaea;
-        }
-        
-        .queue-item {
-            padding: 10px;
-            border: 1px solid #eaeaea;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .queue-item:hover {
-            background: #f1f8ff;
-            border-color: #3498db;
-        }
-        
-        .queue-item.selected {
-            background: #e1f5fe;
-            border-color: #3498db;
-        }
-        
-        .footer {
-            padding: 20px;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 14px;
-            border-top: 1px solid #eaeaea;
-            background: #f8f9fa;
-        }
-        
-        @media (max-width: 768px) {
-            .search-controls {
-                grid-template-columns: 1fr;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPI Queue Updates</title>
+  <style>
+    :root{
+      --primary-color:#63AB8F; --secondary-color:#4A8C7D; --border-color:#DEE2E6;
+      --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
+      --pill:#e9f6f0;
+    }
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:20px;padding:20px;max-width:1400px;background:var(--light-bg);color:var(--text-color)}
+    #logo-container{text-align:center;margin-bottom:20px} #logo{width:300px}
+    h1{margin:0 0 16px}
+    .card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:24px;margin-top:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    label{display:block;font-weight:600;margin-bottom:6px}
+    select,input,button{padding:10px;border:1px solid var(--border-color);border-radius:6px;background:var(--card-bg);font-size:14px}
+    button{background:var(--primary-color);color:#fff;font-weight:600;cursor:pointer;transition:background .2s}
+    button:hover{background:var(--secondary-color)} button:disabled{background:var(--text-light);cursor:not-allowed}
+    .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;align-items:end}
+    .inline{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center} .inline span{color:var(--text-light)}
+    .full-width-btn{width:100%;padding:14px 18px;font-size:16px;margin-top:12px}
+    .muted{color:var(--text-light)} .mono{font-family:ui-monospace,Consolas,Menlo,monospace}
+    .user-info,.conversation-header,.transcript-summary{background:transparent;border:2px solid var(--primary-color);border-radius:10px;padding:16px;margin:12px 0}
+    details{background:var(--light-bg);border:1px solid var(--border-color);border-radius:8px;padding:16px;margin:12px 0}
+    details>summary{cursor:pointer;font-weight:600}
+    pre{background:#1f2937;color:#f3f4f6;padding:16px;border-radius:6px;overflow:auto;font-size:12px}
+    .stats{display:flex;gap:16px;margin:16px 0}
+    .stat-card{flex:1;border:1px solid var(--border-color);border-radius:8px;padding:16px;text-align:center;background:var(--card-bg)}
+    .stat-number{font-size:22px;color:#63AB8F;font-weight:700}
+    .journey-timeline{margin:20px 0 8px;padding-left:20px;border-left:3px solid var(--primary-color)}
+    .journey-step{margin-bottom:18px;position:relative}
+    .journey-step:before{content:'';position:absolute;left:-26px;top:0;width:16px;height:16px;border-radius:50%;background:var(--primary-color)}
+    .step-header{font-weight:700;color:var(--secondary-color);margin-bottom:8px}
+    .step-details{background:var(--card-bg);border:1px solid var(--border-color);border-radius:6px;padding:12px}
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+    .info-item{display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);padding:6px 0}
+    .info-label{font-weight:600;min-width:150px}
+    .participant-badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;margin:2px;border:1px solid var(--border-color);background:#fff}
+    .badge-customer{border-color:#a7e3c6;color:#1f7255}
+    .badge-agent{background:#dbeafe;color:#1e40af}
+    .badge-queue{background:#fde7ff;color:#7c3aed}
+    .transfer-info{background:#fff7ed;border:1px solid var(--border-color);border-radius:6px;padding:8px;margin:8px 0}
+    .transfer-count{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:6px;font-weight:700}
+    .progress-bar{width:100%;height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;margin:10px 0}
+    .progress-fill{height:100%;background:var(--primary-color);transition:width .3s}
+    .t-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 16px}
+    .t-kv{display:flex;gap:10px;justify-content:space-between}.t-kv .k{font-weight:700}
+    .pill{display:inline-block;background:var(--pill);border:1px solid var(--border-color);border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px}
+    .transcript-table{width:100%;border-collapse:collapse;margin-top:10px}
+    .transcript-table th,.transcript-table td{border-bottom:1px solid var(--border-color);padding:8px 10px;vertical-align:top}
+    .transcript-table th{background:var(--primary-color);color:#fff;text-align:left}
+    .sentiment-positive{color:#16a34a;font-weight:700}
+    .sentiment-negative{color:#dc2626;font-weight:700}
+    .sentiment-neutral{color:#f59e0b;font-weight:700}
+    .empathy-positive{color:#16a34a;font-weight:700}
+    .confidence-high{color:#16a34a;font-weight:700}
+    .confidence-medium{color:#f59e0b;font-weight:700}
+    .confidence-low{color:#dc2626;font-weight:700}
+    .loading{opacity:.6;pointer-events:none}
+    .future-date{color:#ccc;cursor:not-allowed}
+
+    /* Additional styles for queue management */
+    .selection-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--light-bg);
+    }
+    .selection-section h3 {
+      margin-top: 0;
+      color: var(--primary-color);
+    }
+    .or-divider {
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      color: var(--text-light);
+    }
+    .multi-select {
+      width: 100%;
+      max-width: 400px;
+    }
+    .action-button {
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    .select-all-checkbox {
+      margin-bottom: 10px;
+    }
+    .error-message {
+      color: #d9534f;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #d9534f;
+      border-radius: 4px;
+      background-color: #f9f2f2;
+    }
+    .success-message {
+      color: #3c763d;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #3c763d;
+      border-radius: 4px;
+      background-color: #dff0d8;
+    }
+    .tab-container {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      margin-right: 4px;
+      background: var(--light-bg);
+      transition: background 0.2s;
+    }
+    .tab.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <i class="fas fa-headset"></i>
-                <span>Queue Management System</span>
-            </div>
-            <div class="user-info">
-                <div class="user-avatar">JD</div>
-                <div>John Doe</div>
-            </div>
-        </header>
-        
-        <div class="tabs">
-            <div class="tab active" data-tab="view">View Queue Assignments</div>
-            <div class="tab" data-tab="add">Add to Queue</div>
-            <div class="tab" data-tab="remove">Remove from Queue</div>
-        </div>
-        
-        <!-- View Queue Assignments Tab -->
-        <div class="tab-content active" id="view">
-            <section class="search-section">
-                <h2 class="search-title">
-                    <i class="fas fa-search"></i>
-                    Search Queue Assignments
-                </h2>
-                
-                <div class="search-controls">
-                    <div class="control-group">
-                        <label class="control-label">Select Work Team</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="teamDropdown">
-                                <span>Team Manchester</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="teamMenu">
-                                <div class="dropdown-item">
-                                    <input type="radio" name="team" id="team1" checked>
-                                    <label for="team1">Team Manchester</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="team" id="team2">
-                                    <label for="team2">Team London</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="team" id="team3">
-                                    <label for="team3">Team New York</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="team" id="team4">
-                                    <label for="team4">Team Tokyo</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label class="control-label">Select Agents</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="agentDropdown">
-                                <span>All Agents</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="agentMenu">
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="agent1" checked>
-                                    <label for="agent1">Sarah Johnson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="agent2" checked>
-                                    <label for="agent2">Michael Chen</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="agent3" checked>
-                                    <label for="agent3">Emma Wilson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="agent4" checked>
-                                    <label for="agent4">David Brown</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="agent5" checked>
-                                    <label for="agent5">Lisa Rodriguez</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label class="control-label">Select Queue</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="queueDropdown">
-                                <span>All Queues</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="queueMenu">
-                                <div class="dropdown-item">
-                                    <input type="radio" name="queue" id="queue1" checked>
-                                    <label for="queue1">All Queues</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="queue" id="queue2">
-                                    <label for="queue2">Sales Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="queue" id="queue3">
-                                    <label for="queue3">Support Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="queue" id="queue4">
-                                    <label for="queue4">Billing Queue</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="search-button" id="searchBtn">
-                    <i class="fas fa-sync-alt"></i>
-                    Refresh Search
-                </button>
-            </section>
-            
-            <section class="results-section">
-                <div class="results-header">
-                    <h3 class="results-title">Queue Assignments</h3>
-                    <div class="results-count">Showing 5 of 5 agents</div>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Agent</th>
-                            <th>Team</th>
-                            <th>Assigned Queues</th>
-                            <th>Status</th>
-                            <th>Last Activity</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">SJ</div>
-                                    Sarah Johnson
-                                </div>
-                            </td>
-                            <td>Team Manchester</td>
-                            <td>Sales, Support</td>
-                            <td><span style="color:#27ae60; font-weight:600">Active</span></td>
-                            <td>2 minutes ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">MC</div>
-                                    Michael Chen
-                                </div>
-                            </td>
-                            <td>Team Manchester</td>
-                            <td>Support, Billing</td>
-                            <td><span style="color:#27ae60; font-weight:600">Active</span></td>
-                            <td>5 minutes ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">EW</div>
-                                    Emma Wilson
-                                </div>
-                            </td>
-                            <td>Team Manchester</td>
-                            <td>Billing</td>
-                            <td><span style="color:#e74c3c; font-weight:600">Inactive</span></td>
-                            <td>1 hour ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">DB</div>
-                                    David Brown
-                                </div>
-                            </td>
-                            <td>Team Manchester</td>
-                            <td>Sales</td>
-                            <td><span style="color:#27ae60; font-weight:600">Active</span></td>
-                            <td>15 minutes ago</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">LR</div>
-                                    Lisa Rodriguez
-                                </div>
-                            </td>
-                            <td>Team Manchester</td>
-                            <td>Support</td>
-                            <td><span style="color:#27ae60; font-weight:600">Active</span></td>
-                            <td>8 minutes ago</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-        </div>
-        
-        <!-- Add to Queue Tab -->
-        <div class="tab-content" id="add">
-            <section class="search-section">
-                <h2 class="search-title">
-                    <i class="fas fa-user-plus"></i>
-                    Add Agents to Queues
-                </h2>
-                
-                <div class="search-controls">
-                    <div class="control-group">
-                        <label class="control-label">Select Agents</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="addAgentDropdown">
-                                <span>Select Agents</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="addAgentMenu">
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="addAgent1">
-                                    <label for="addAgent1">Sarah Johnson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="addAgent2">
-                                    <label for="addAgent2">Michael Chen</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="addAgent3">
-                                    <label for="addAgent3">Emma Wilson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="addAgent4">
-                                    <label for="addAgent4">David Brown</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="addAgent5">
-                                    <label for="addAgent5">Lisa Rodriguez</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label class="control-label">Select Target Queue</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="addQueueDropdown">
-                                <span>Select Queue</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="addQueueMenu">
-                                <div class="dropdown-item">
-                                    <input type="radio" name="addQueue" id="addQueue1">
-                                    <label for="addQueue1">Sales Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="addQueue" id="addQueue2">
-                                    <label for="addQueue2">Support Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="addQueue" id="addQueue3">
-                                    <label for="addQueue3">Billing Queue</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="search-button" id="addToQueueBtn">
-                    <i class="fas fa-plus-circle"></i>
-                    Add to Queue
-                </button>
-            </section>
-            
-            <section class="queue-selector">
-                <div class="queue-selector-header">
-                    <h3 class="queue-selector-title">Available Queues</h3>
-                    <div>Click to select</div>
-                </div>
-                <div class="queue-list">
-                    <div class="queue-item">Sales Queue</div>
-                    <div class="queue-item">Support Queue</div>
-                    <div class="queue-item">Billing Queue</div>
-                    <div class="queue-item">Technical Queue</div>
-                    <div class="queue-item">Escalations Queue</div>
-                    <div class="queue-item">VIP Queue</div>
-                </div>
-            </section>
-        </div>
-        
-        <!-- Remove from Queue Tab -->
-        <div class="tab-content" id="remove">
-            <section class="search-section">
-                <h2 class="search-title">
-                    <i class="fas fa-user-minus"></i>
-                    Remove Agents from Queues
-                </h2>
-                
-                <div class="search-controls">
-                    <div class="control-group">
-                        <label class="control-label">Select Agents</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="removeAgentDropdown">
-                                <span>Select Agents</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="removeAgentMenu">
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="removeAgent1">
-                                    <label for="removeAgent1">Sarah Johnson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="removeAgent2">
-                                    <label for="removeAgent2">Michael Chen</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="removeAgent3">
-                                    <label for="removeAgent3">Emma Wilson</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="removeAgent4">
-                                    <label for="removeAgent4">David Brown</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="checkbox" id="removeAgent5">
-                                    <label for="removeAgent5">Lisa Rodriguez</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="control-group">
-                        <label class="control-label">Select Queue to Remove From</label>
-                        <div class="dropdown">
-                            <div class="dropdown-toggle" id="removeQueueDropdown">
-                                <span>Select Queue</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
-                            <div class="dropdown-menu" id="removeQueueMenu">
-                                <div class="dropdown-item">
-                                    <input type="radio" name="removeQueue" id="removeQueue1">
-                                    <label for="removeQueue1">Sales Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="removeQueue" id="removeQueue2">
-                                    <label for="removeQueue2">Support Queue</label>
-                                </div>
-                                <div class="dropdown-item">
-                                    <input type="radio" name="removeQueue" id="removeQueue3">
-                                    <label for="removeQueue3">Billing Queue</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="search-button" style="background: linear-gradient(90deg, #e74c3c, #c0392b);" id="removeFromQueueBtn">
-                    <i class="fas fa-minus-circle"></i>
-                    Remove from Queue
-                </button>
-            </section>
-            
-            <section class="results-section">
-                <div class="results-header">
-                    <h3 class="results-title">Current Queue Assignments</h3>
-                    <div class="results-count">Agents with queue assignments</div>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Agent</th>
-                            <th>Current Queues</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">SJ</div>
-                                    Sarah Johnson
-                                </div>
-                            </td>
-                            <td>Sales, Support</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-danger btn-sm">Remove from Sales</button>
-                                    <button class="btn btn-danger btn-sm">Remove from Support</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">MC</div>
-                                    Michael Chen
-                                </div>
-                            </td>
-                            <td>Support, Billing</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-danger btn-sm">Remove from Support</button>
-                                    <button class="btn btn-danger btn-sm">Remove from Billing</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="avatar">EW</div>
-                                    Emma Wilson
-                                </div>
-                            </td>
-                            <td>Billing</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-danger btn-sm">Remove from Billing</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-        </div>
-        
-        <div class="footer">
-            <p>Queue Management System &copy; 2023 | All Rights Reserved</p>
-        </div>
+  <div id="logo-container">
+    <img id="logo" src="https://raw.githubusercontent.com/gmcglynn88/ExternalWorkCreation/main/Consultinglogo.png" alt="Company Logo">
+  </div>
+  <h1>Queue Management Tool</h1>
+
+  <div id="loginSection" class="card" style="text-align: center; margin: 20px;">
+    <div class="loading">Authenticating with PureCloud...</div>
+  </div>
+
+  <div id="appContent" style="display: none;">
+    <div id="messageContainer" style="display: none;"></div>
+
+    <div class="tab-container">
+      <div class="tab active" data-tab="remove">Remove Queues</div>
+      <div class="tab" data-tab="add">Add Queues</div>
     </div>
 
-    <script>
-        // Tab functionality
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabId = this.getAttribute('data-tab');
-                
-                // Update active tab
-                document.querySelectorAll('.tab').forEach(t => {
-                    t.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                // Show active tab content
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(tabId).classList.add('active');
-            });
+    <!-- Remove Queues Tab -->
+    <div id="removeTab" class="tab-content active">
+      <div class="selection-section">
+        <h3>Search Options</h3>
+        <div class="controls">
+          <div>
+            <label for="agentDropdownRemove">Select Agents</label>
+            <select id="agentDropdownRemove" multiple class="multi-select">
+              <option value="">Loading agents...</option>
+            </select>
+          </div>
+          <div>
+            <label for="queueDropdownRemove">Select Queue</label>
+            <select id="queueDropdownRemove">
+              <option value="">Select Queue</option>
+            </select>
+          </div>
+          <div>
+            <label for="teamDropdownRemove">Select Work Team</label>
+            <select id="teamDropdownRemove">
+              <option value="">Select Team</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersRemove" class="full-width-btn">Get Users</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin: 0 0 12px;">Queue Assignments - Remove</h2>
+        <table id="userQueuesTableRemove">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllUsersRemove" class="select-all-checkbox"></th>
+              <th>Agent</th>
+              <th>Queues Assigned</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button id="removeQueues" class="full-width-btn action-button" disabled>Remove Selected Queues from Selected Users</button>
+      </div>
+    </div>
+
+    <!-- Add Queues Tab -->
+    <div id="addTab" class="tab-content">
+      <div class="selection-section">
+        <h3>Search Options</h3>
+        <div class="controls">
+          <div>
+            <label for="agentDropdownAdd">Select Agents</label>
+            <select id="agentDropdownAdd" multiple class="multi-select">
+              <option value="">Loading agents...</option>
+            </select>
+          </div>
+          <div>
+            <label for="queueDropdownAdd">Select Queue</label>
+            <select id="queueDropdownAdd">
+              <option value="">Select Queue</option>
+            </select>
+          </div>
+          <div>
+            <label for="teamDropdownAdd">Select Work Team</label>
+            <select id="teamDropdownAdd">
+              <option value="">Select Team</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersAdd" class="full-width-btn">Get Users</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin: 0 0 12px;">Queue Assignments - Add</h2>
+        <table id="userQueuesTableAdd">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllUsersAdd" class="select-all-checkbox"></th>
+              <th>Agent</th>
+              <th>Queues Assigned</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button id="addQueues" class="full-width-btn action-button" disabled>Add Selected Queues to Selected Users</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const clientId = 'd4529142-7340-4cd8-a9f9-f3a4d25670df';
+    const redirectUri = 'https://gmcglynn88.github.io/Queue-updater/';
+    const responseType = 'token';
+    const oauthUrl = `https://login.mypurecloud.ie/oauth/authorize?client_id=${clientId}&response_type=${responseType}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+    let token = null;
+    let availableUsers = [];
+    let availableQueues = [];
+    let availableTeams = [];
+    let selectedUsers = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check for token in URL hash
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      token = params.get('access_token');
+
+      if (token) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        initializeApp(token);
+      } else {
+        // Redirect to OAuth if no token
+        window.location.href = oauthUrl;
+      }
+    });
+
+    function showMessage(message, type = 'error') {
+      const messageContainer = document.getElementById('messageContainer');
+      messageContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+      messageContainer.style.display = 'block';
+
+      // Auto-hide success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          messageContainer.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    async function initializeApp(token) {
+      console.log("Initializing app with token...");
+      try {
+        await Promise.all([
+          fetchAllUsers(token),
+          fetchAllQueues(token),
+          fetchAllTeams(token)
+        ]);
+        populateDropdowns();
+        setupEventListeners(token);
+      } catch (error) {
+        console.error("Initialization error:", error);
+        showMessage("Error initializing application. Please try again.");
+        setTimeout(() => window.location.href = oauthUrl, 3000);
+      }
+    }
+
+    async function fetchAllUsers(token) {
+      let allUsers = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalUsers = 0;
+
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/users?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         });
-        
-        // Dropdown functionality
-        document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const menu = this.nextElementSibling;
-                const isOpen = menu.style.display === 'block';
-                
-                // Close all dropdowns
-                document.querySelectorAll('.dropdown-menu').forEach(m => {
-                    m.style.display = 'none';
-                });
-                
-                // Toggle current dropdown
-                menu.style.display = isOpen ? 'none' : 'block';
-            });
-        });
-        
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.matches('.dropdown-toggle') && !event.target.closest('.dropdown-menu')) {
-                document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                    menu.style.display = 'none';
-                });
-            }
-        });
-        
-        // Update dropdown text when selection changes
-        document.querySelectorAll('input[name="team"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    document.getElementById('teamDropdown').querySelector('span').textContent = this.nextElementSibling.textContent;
-                    refreshResults();
-                }
-            });
-        });
-        
-        document.querySelectorAll('input[name="queue"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    document.getElementById('queueDropdown').querySelector('span').textContent = this.nextElementSibling.textContent;
-                    refreshResults();
-                }
-            });
-        });
-        
-        document.querySelectorAll('#agentMenu input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateAgentDropdownText();
-                refreshResults();
-            });
-        });
-        
-        // Add Agent dropdown update
-        document.querySelectorAll('#addAgentMenu input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateAddAgentDropdownText();
-            });
-        });
-        
-        // Remove Agent dropdown update
-        document.querySelectorAll('#removeAgentMenu input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateRemoveAgentDropdownText();
-            });
-        });
-        
-        // Add Queue dropdown update
-        document.querySelectorAll('input[name="addQueue"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    document.getElementById('addQueueDropdown').querySelector('span').textContent = this.nextElementSibling.textContent;
-                }
-            });
-        });
-        
-        // Remove Queue dropdown update
-        document.querySelectorAll('input[name="removeQueue"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    document.getElementById('removeQueueDropdown').querySelector('span').textContent = this.nextElementSibling.textContent;
-                }
-            });
-        });
-        
-        function updateAgentDropdownText() {
-            const checkedAgents = Array.from(document.querySelectorAll('#agentMenu input[type="checkbox"]:checked'));
-            const dropdownText = document.getElementById('agentDropdown').querySelector('span');
-            
-            if (checkedAgents.length === 0) {
-                dropdownText.textContent = 'No agents selected';
-            } else if (checkedAgents.length === document.querySelectorAll('#agentMenu input[type="checkbox"]').length) {
-                dropdownText.textContent = 'All Agents';
-            } else {
-                dropdownText.textContent = `${checkedAgents.length} agents selected`;
-            }
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch users");
         }
-        
-        function updateAddAgentDropdownText() {
-            const checkedAgents = Array.from(document.querySelectorAll('#addAgentMenu input[type="checkbox"]:checked'));
-            const dropdownText = document.getElementById('addAgentDropdown').querySelector('span');
-            
-            if (checkedAgents.length === 0) {
-                dropdownText.textContent = 'Select Agents';
-            } else {
-                dropdownText.textContent = `${checkedAgents.length} agents selected`;
-            }
-        }
-        
-        function updateRemoveAgentDropdownText() {
-            const checkedAgents = Array.from(document.querySelectorAll('#removeAgentMenu input[type="checkbox"]:checked'));
-            const dropdownText = document.getElementById('removeAgentDropdown').querySelector('span');
-            
-            if (checkedAgents.length === 0) {
-                dropdownText.textContent = 'Select Agents';
-            } else {
-                dropdownText.textContent = `${checkedAgents.length} agents selected`;
-            }
-        }
-        
-        // Queue item selection
-        document.querySelectorAll('.queue-item').forEach(item => {
-            item.addEventListener('click', function() {
-                this.classList.toggle('selected');
-            });
+
+        const data = await response.json();
+        allUsers = allUsers.concat(data.entities || []);
+        totalUsers = data.total || 0;
+        pageNumber++;
+      } while (allUsers.length < totalUsers);
+
+      availableUsers = allUsers;
+      console.log(`Loaded ${availableUsers.length} users from API`);
+    }
+
+    async function fetchAllQueues(token) {
+      let allQueues = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalQueues = 0;
+
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/routing/queues?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         });
-        
-        // Search button functionality
-        document.getElementById('searchBtn').addEventListener('click', refreshResults);
-        
-        // Add to Queue button functionality
-        document.getElementById('addToQueueBtn').addEventListener('click', function() {
-            const selectedAgents = Array.from(document.querySelectorAll('#addAgentMenu input[type="checkbox"]:checked'));
-            const selectedQueue = document.querySelector('input[name="addQueue"]:checked');
-            
-            if (selectedAgents.length === 0) {
-                showNotification('Please select at least one agent', 'error');
-                return;
-            }
-            
-            if (!selectedQueue) {
-                showNotification('Please select a queue', 'error');
-                return;
-            }
-            
-            const btn = this;
-            const originalText = btn.innerHTML;
-            
-            // Show loading state
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-            btn.disabled = true;
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                // Reset button
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                
-                // Show success notification
-                showNotification(`Successfully added ${selectedAgents.length} agents to ${selectedQueue.nextElementSibling.textContent}`, 'success');
-            }, 1000);
-        });
-        
-        // Remove from Queue button functionality
-        document.getElementById('removeFromQueueBtn').addEventListener('click', function() {
-            const selectedAgents = Array.from(document.querySelectorAll('#removeAgentMenu input[type="checkbox"]:checked'));
-            const selectedQueue = document.querySelector('input[name="removeQueue"]:checked');
-            
-            if (selectedAgents.length === 0) {
-                showNotification('Please select at least one agent', 'error');
-                return;
-            }
-            
-            if (!selectedQueue) {
-                showNotification('Please select a queue', 'error');
-                return;
-            }
-            
-            const btn = this;
-            const originalText = btn.innerHTML;
-            
-            // Show loading state
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
-            btn.disabled = true;
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                // Reset button
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                
-                // Show success notification
-                showNotification(`Successfully removed ${selectedAgents.length} agents from ${selectedQueue.nextElementSibling.textContent}`, 'success');
-            }, 1000);
-        });
-        
-        // Simulate search refresh
-        function refreshResults() {
-            const searchBtn = document.getElementById('searchBtn');
-            const originalText = searchBtn.innerHTML;
-            
-            // Show loading state
-            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-            searchBtn.disabled = true;
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                // Update results count with random number to show it's working
-                const resultsCount = document.querySelector('.results-count');
-                const totalAgents = document.querySelectorAll('#agentMenu input[type="checkbox"]:checked').length;
-                resultsCount.textContent = `Showing ${totalAgents} of ${totalAgents} agents`;
-                
-                // Reset button
-                searchBtn.innerHTML = originalText;
-                searchBtn.disabled = false;
-                
-                // Show notification
-                showNotification('Search results updated successfully!', 'success');
-            }, 800);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch queues");
         }
-        
-        function showNotification(message, type = 'success') {
-            // Create notification element
-            const notification = document.createElement('div');
-            const backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c';
-            
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${backgroundColor};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                z-index: 1000;
-                transition: all 0.3s;
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+
+        const data = await response.json();
+        allQueues = allQueues.concat(data.entities || []);
+        totalQueues = data.total || 0;
+        pageNumber++;
+      } while (allQueues.length < totalQueues);
+
+      availableQueues = allQueues;
+    }
+
+    async function fetchAllTeams(token) {
+      let allTeams = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalTeams = 0;
+
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/teams?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch teams");
         }
-        
-        // Initialize dropdown texts
-        updateAgentDropdownText();
-        updateAddAgentDropdownText();
-        updateRemoveAgentDropdownText();
-    </script>
+
+        const data = await response.json();
+        allTeams = allTeams.concat(data.entities || []);
+        totalTeams = data.total || 0;
+        pageNumber++;
+      } while (allTeams.length < totalTeams);
+
+      availableTeams = allTeams;
+    }
+
+    function populateDropdowns() {
+      // Remove tab dropdowns
+      populateAgentDropdown('agentDropdownRemove');
+      populateQueueDropdown('queueDropdownRemove');
+      populateTeamDropdown('teamDropdownRemove');
+
+      // Add tab dropdowns
+      populateAgentDropdown('agentDropdownAdd');
+      populateQueueDropdown('queueDropdownAdd');
+      populateTeamDropdown('teamDropdownAdd');
+    }
+
+    function populateAgentDropdown(dropdownId) {
+      const agentDropdown = document.getElementById(dropdownId);
+      agentDropdown.innerHTML = '';
+
+      // Only show users with valid names
+      const validUsers = availableUsers.filter(user => 
+        user.name && user.name.trim() !== '' && user.name !== 'Unknown User'
+      );
+
+      validUsers.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.name || user.email || 'Unknown User';
+        agentDropdown.appendChild(option);
+      });
+    }
+
+    function populateQueueDropdown(dropdownId) {
+      const queueDropdown = document.getElementById(dropdownId);
+      queueDropdown.innerHTML = '<option value="">Select Queue</option>';
+
+      availableQueues.forEach(queue => {
+        const option = document.createElement('option');
+        option.value = queue.id;
+        option.textContent = queue.name;
+        queueDropdown.appendChild(option);
+      });
+    }
+
+    function populateTeamDropdown(dropdownId) {
+      const teamDropdown = document.getElementById(dropdownId);
+      teamDropdown.innerHTML = '<option value="">Select Team</option>';
+
+      availableTeams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name;
+        teamDropdown.appendChild(option);
+      });
+    }
+
+    function setupEventListeners(token) {
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+        });
+      });
+
+      // Remove tab listeners
+      document.getElementById('fetchUsersRemove').addEventListener('click', () => fetchUsers('remove', token));
+      document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues(token));
+      document.getElementById('selectAllUsersRemove').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('#userQueuesTableRemove tbody input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+        updateRemoveButtonState();
+      });
+
+      // Add tab listeners
+      document.getElementById('fetchUsersAdd').addEventListener('click', () => fetchUsers('add', token));
+      document.getElementById('addQueues').addEventListener('click', () => addSelectedQueues(token));
+      document.getElementById('selectAllUsersAdd').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('#userQueuesTableAdd tbody input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+        updateAddButtonState();
+      });
+    }
+
+    async function fetchUsers(mode, token) {
+      const agentIds = Array.from(document.getElementById(`agentDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).selectedOptions).map(option => option.value);
+      const queueId = document.getElementById(`queueDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).value;
+      const teamId = document.getElementById(`teamDropdown${mode.charAt(0).toUpperCase() + mode.slice(1)}`).value;
+
+      if (agentIds.length === 0 && !queueId && !teamId) {
+        showMessage('Please select at least one search option.');
+        return;
+      }
+
+      try {
+        const tableBody = document.querySelector(`#userQueuesTable${mode.charAt(0).toUpperCase() + mode.slice(1)} tbody`);
+        tableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading users...</td></tr>';
+
+        let users = [];
+
+        if (agentIds.length > 0) {
+          // Get selected agents
+          users = agentIds.map(userId => availableUsers.find(u => u.id === userId)).filter(user => user);
+        } else if (queueId) {
+          // Get users from queue
+          const queueMembers = await fetchQueueMembersForQueue(queueId, token);
+          users = await processQueueMembers(queueMembers);
+        } else if (teamId) {
+          // Get users from team
+          const teamMembers = await fetchTeamMembers(teamId, token);
+          users = await processTeamMembers(teamMembers);
+        }
+
+        if (users.length === 0) {
+          showMessage('No users found for the selected criteria.');
+          return;
+        }
+
+        // Get queues for each user
+        const usersWithQueues = await Promise.all(
+          users.map(async (user) => {
+            const queues = await fetchUserQueuesForUser(user.id, token);
+            return { user, queues };
+          })
+        );
+
+        if (mode === 'remove') {
+          populateRemoveTable(usersWithQueues);
+        } else {
+          populateAddTable(usersWithQueues);
+        }
+
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        showMessage(`Failed to fetch users: ${error.message}`);
+      }
+    }
+
+    async function processQueueMembers(queueMembers) {
+      const users = [];
+      for (const member of queueMembers) {
+        const userId = member.user?.id;
+        if (!userId) continue;
+
+        const user = availableUsers.find(u => u.id === userId);
+        if (user && user.name && user.name.trim() !== '' && user.name !== 'Unknown User') {
+          users.push(user);
+        }
+      }
+      return users;
+    }
+
+    async function fetchTeamMembers(teamId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/teams/${teamId}/members`;
+      const response = await fetch(url, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to fetch members for team ${teamId}`);
+      }
+
+      const data = await response.json();
+      return data.entities || [];
+    }
+
+    async function processTeamMembers(teamMembers) {
+      const users = [];
+      for (const member of teamMembers) {
+        const userId = member.id;
+        if (!userId) continue;
+
+        const user = availableUsers.find(u => u.id === userId);
+        if (user && user.name && user.name.trim() !== '' && user.name !== 'Unknown User') {
+          users.push(user);
+        }
+      }
+      return users;
+    }
+
+    async function fetchQueueMembersForQueue(queueId, token) {
+      let allMembers = [];
+      let pageNumber = 1;
+      const pageSize = 100;
+      let totalMembers = 0;
+
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Failed to fetch members for queue ${queueId}`);
+        }
+
+        const data = await response.json();
+        allMembers = allMembers.concat(data.entities || []);
+        totalMembers = data.total || 0;
+        pageNumber++;
+      } while (allMembers.length < totalMembers);
+
+      return allMembers;
+    }
+
+    async function fetchUserQueuesForUser(userId, token) {
+      try {
+        const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/queues`;
+        const response = await fetch(url, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return [];
+          }
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Failed to fetch queues for user ${userId}`);
+        }
+
+        const data = await response.json();
+        return data.entities || [];
+      } catch (error) {
+        console.error(`Error fetching queues for user ${userId}:`, error);
+        return [];
+      }
+    }
+
+    function populateRemoveTable(usersWithQueues) {
+      const tableBody = document.querySelector('#userQueuesTableRemove tbody');
+      tableBody.innerHTML = "";
+
+      if (usersWithQueues.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        return;
+      }
+
+      usersWithQueues.forEach(({ user, queues }) => {
+        const row = document.createElement("tr");
+
+        // Create queue selection dropdown - only show queues the user currently has
+        let queueOptions = '<option value="">Select Queue to Remove</option>';
+        if (queues.length > 0) {
+          queues.forEach(queue => {
+            queueOptions += `<option value="${queue.id}">${queue.name}</option>`;
+          });
+        } else {
+          queueOptions = '<option value="">No Queues Assigned</option>';
+        }
+
+        row.innerHTML = `
+          <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox-remove"></td>
+          <td>${user.name}</td>
+          <td>${queues.length > 0 ? queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
+          <td>
+            <select data-user-id="${user.id}" class="queue-select-remove" ${queues.length === 0 ? 'disabled' : ''}>
+              ${queueOptions}
+            </select>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Add event listeners
+      document.querySelectorAll('.user-checkbox-remove').forEach(checkbox => {
+        checkbox.addEventListener('change', updateRemoveButtonState);
+      });
+
+      document.querySelectorAll('.queue-select-remove').forEach(select => {
+        select.addEventListener('change', updateRemoveButtonState);
+      });
+
+      updateRemoveButtonState();
+    }
+
+    function populateAddTable(usersWithQueues) {
+      const tableBody = document.querySelector('#userQueuesTableAdd tbody');
+      tableBody.innerHTML = "";
+
+      if (usersWithQueues.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        return;
+      }
+
+      usersWithQueues.forEach(({ user, queues }) => {
+        const row = document.createElement("tr");
+
+        // Get queues NOT assigned to the user
+        const assignedQueueIds = queues.map(q => q.id);
+        const availableQueuesForUser = availableQueues.filter(queue => !assignedQueueIds.includes(queue.id));
+
+        // Create queue selection dropdown - only show queues the user doesn't have
+        let queueOptions = '<option value="">Select Queue to Add</option>';
+        if (availableQueuesForUser.length > 0) {
+          availableQueuesForUser.forEach(queue => {
+            queueOptions += `<option value="${queue.id}">${queue.name}</option>`;
+          });
+        } else {
+          queueOptions = '<option value="">All Queues Assigned</option>';
+        }
+
+        row.innerHTML = `
+          <td><input type="checkbox" data-user-id="${user.id}" class="user-checkbox-add"></td>
+          <td>${user.name}</td>
+          <td>${queues.length > 0 ? queues.map(queue => queue.name).join(', ') : 'No Queues'}</td>
+          <td>
+            <select data-user-id="${user.id}" class="queue-select-add" ${availableQueuesForUser.length === 0 ? 'disabled' : ''}>
+              ${queueOptions}
+            </select>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Add event listeners
+      document.querySelectorAll('.user-checkbox-add').forEach(checkbox => {
+        checkbox.addEventListener('change', updateAddButtonState);
+      });
+
+      document.querySelectorAll('.queue-select-add').forEach(select => {
+        select.addEventListener('change', updateAddButtonState);
+      });
+
+      updateAddButtonState();
+    }
+
+    function updateRemoveButtonState() {
+      const removeButton = document.getElementById('removeQueues');
+      const checkedUsers = document.querySelectorAll('.user-checkbox-remove:checked');
+      let hasSelectedQueues = false;
+
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-remove[data-user-id="${userId}"]`);
+        if (queueSelect && queueSelect.value) {
+          hasSelectedQueues = true;
+        }
+      });
+
+      removeButton.disabled = !(checkedUsers.length > 0 && hasSelectedQueues);
+    }
+
+    function updateAddButtonState() {
+      const addButton = document.getElementById('addQueues');
+      const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
+      let hasSelectedQueues = false;
+
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-add[data-user-id="${userId}"]`);
+        if (queueSelect && queueSelect.value) {
+          hasSelectedQueues = true;
+        }
+      });
+
+      addButton.disabled = !(checkedUsers.length > 0 && hasSelectedQueues);
+    }
+
+    async function removeSelectedQueues(token) {
+      const checkedUsers = document.querySelectorAll('.user-checkbox-remove:checked');
+      const operations = [];
+
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-remove[data-user-id="${userId}"]`);
+        const queueId = queueSelect ? queueSelect.value : null;
+
+        if (queueId) {
+          operations.push({ userId, queueId });
+        }
+      });
+
+      if (operations.length === 0) {
+        showMessage('No valid operations to perform.');
+        return;
+      }
+
+      try {
+        const removeButton = document.getElementById('removeQueues');
+        removeButton.disabled = true;
+        removeButton.textContent = 'Processing...';
+
+        const results = await Promise.allSettled(
+          operations.map(op => removeQueueFromUser(op.userId, op.queueId, token))
+        );
+
+        const failures = results.filter(result => result.status === 'rejected');
+        if (failures.length > 0) {
+          console.error("Some operations failed:", failures);
+          showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
+        } else {
+          showMessage('All queue removals completed successfully!', 'success');
+        }
+
+        // Refresh the current view
+        await fetchUsers('remove', token);
+
+      } catch (error) {
+        console.error("Error removing queues:", error);
+        showMessage(`Failed to remove queues: ${error.message}`);
+      } finally {
+        const removeButton = document.getElementById('removeQueues');
+        removeButton.disabled = false;
+        removeButton.textContent = 'Remove Selected Queues from Selected Users';
+      }
+    }
+
+    async function addSelectedQueues(token) {
+      const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
+      const operations = [];
+
+      console.log('Add queues - checked users:', checkedUsers.length);
+
+      checkedUsers.forEach(checkbox => {
+        const userId = checkbox.getAttribute('data-user-id');
+        const queueSelect = document.querySelector(`.queue-select-add[data-user-id="${userId}"]`);
+        const queueId = queueSelect ? queueSelect.value : null;
+
+        console.log('Add queues - user:', userId, 'queue:', queueId);
+
+        if (queueId) {
+          operations.push({ userId, queueId });
+        }
+      });
+
+      if (operations.length === 0) {
+        showMessage('No valid operations to perform. Please ensure you have selected both users and queues to add.');
+        return;
+      }
+
+      console.log('Add queues - operations to perform:', operations);
+
+      try {
+        const addButton = document.getElementById('addQueues');
+        addButton.disabled = true;
+        addButton.textContent = 'Processing...';
+
+        const results = await Promise.allSettled(
+          operations.map(op => addQueueToUser(op.userId, op.queueId, token))
+        );
+
+        console.log('Add queues - results:', results);
+
+        const failures = results.filter(result => result.status === 'rejected');
+        if (failures.length > 0) {
+          console.error("Some operations failed:", failures);
+          const errorMessages = failures.map(f => f.reason?.message || 'Unknown error').join(', ');
+          showMessage(`Completed with ${failures.length} error(s): ${errorMessages}`);
+        } else {
+          showMessage('All queue additions completed successfully!', 'success');
+        }
+
+        // Refresh the current view
+        await fetchUsers('add', token);
+
+      } catch (error) {
+        console.error("Error adding queues:", error);
+        showMessage(`Failed to add queues: ${error.message}`);
+      } finally {
+        const addButton = document.getElementById('addQueues');
+        addButton.disabled = false;
+        addButton.textContent = 'Add Selected Queues to Selected Users';
+      }
+    }
+
+    async function removeQueueFromUser(userId, queueId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to remove queue ${queueId} from user ${userId}`);
+      }
+
+      return { userId, queueId, success: true };
+    }
+
+    async function addQueueToUser(userId, queueId, token) {
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
+
+
+      // Correct body structure - array of member objects with just id
+      const body = [
+        {
+          id: userId
+        }
+      ];
+
+      console.log('Adding user to queue - URL:', url);
+      console.log('Adding user to queue - Body:', body);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Add queue error response:', errorData);
+        throw new Error(errorData.message || `Failed to add queue ${queueId} to user ${userId}`);
+      }
+
+      return { userId, queueId, success: true };
+    }
+  </script>
 </body>
 </html>
