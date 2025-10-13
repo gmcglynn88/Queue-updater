@@ -378,16 +378,33 @@
         
         const queueMembers = await fetchQueueMembersForQueue(queueId, token);
         
-        // Get full user details and their queues
+        // Get full user details and ALL their queues (not just the selected queue)
         const usersWithQueues = await Promise.all(
           queueMembers.map(async member => {
-            const user = availableUsers.find(u => u.id === member.user.id) || member.user;
-            const queues = await fetchUserQueuesForUser(member.user.id, token);
+            // The queue members API returns user objects with id and name properties
+            const userId = member.id || member.user?.id;
+            if (!userId) return null;
+            
+            // Try to find the user in our availableUsers first for complete info
+            let user = availableUsers.find(u => u.id === userId);
+            
+            // If not found in availableUsers, create a basic user object from the member data
+            if (!user) {
+              user = {
+                id: userId,
+                name: member.name || member.user?.name || 'Unknown User'
+              };
+            }
+            
+            // Fetch ALL queues for this user
+            const queues = await fetchUserQueuesForUser(userId, token);
             return { user, queues };
           })
         );
         
-        populateUserQueuesTable(usersWithQueues);
+        // Filter out any null results
+        const validUsers = usersWithQueues.filter(user => user !== null);
+        populateUserQueuesTable(validUsers);
       } catch (error) {
         console.error("Error fetching queue members:", error);
         showMessage(`Failed to fetch queue members: ${error.message}`);
@@ -433,6 +450,11 @@
       });
       
       if (!response.ok) {
+        // If we get a 404 or other error, return empty array instead of throwing
+        if (response.status === 404) {
+          console.warn(`User ${userId} not found or has no queues`);
+          return [];
+        }
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to fetch queues for user ${userId}`);
       }
@@ -453,7 +475,7 @@
       usersWithQueues.forEach(({ user, queues }) => {
         const row = document.createElement("tr");
         
-        // Create queue selection dropdown
+        // Create queue selection dropdown - include ALL queues the user has
         let queueOptions = '<option value="">Select Queue to Remove</option>';
         if (queues.length > 0) {
           queues.forEach(queue => {
