@@ -151,6 +151,10 @@
         <h3>Search Options</h3>
         <div class="controls">
           <div>
+            <label>Select Management Units</label>
+            <div id="managementUnitDropdownRemove" class="checkbox-dropdown"></div>
+          </div>
+          <div>
             <label>Select Agents</label>
             <div id="agentDropdownRemove" class="checkbox-dropdown"></div>
           </div>
@@ -167,7 +171,7 @@
             <button id="fetchUsersRemove" class="full-width-btn">Get Users</button>
           </div>
         </div>
-        <div class="muted">Pick any combo. If you only choose queues, I’ll scan those queues and list matching agents.</div>
+        <div class="muted">Pick any combo. If you only choose queues/management units, I'll scan those and list matching agents.</div>
       </div>
 
       <div class="card">
@@ -194,6 +198,10 @@
         <h3>Search Options</h3>
         <div class="controls">
           <div>
+            <label>Select Management Units</label>
+            <div id="managementUnitDropdownAdd" class="checkbox-dropdown"></div>
+          </div>
+          <div>
             <label>Select Agents</label>
             <div id="agentDropdownAdd" class="checkbox-dropdown"></div>
           </div>
@@ -210,7 +218,7 @@
             <button id="fetchUsersAdd" class="full-width-btn">Get Users</button>
           </div>
         </div>
-        <div class="muted">Filtered by queues? I’ll preselect a missing one per user where possible.</div>
+        <div class="muted">Filtered by queues/management units? I'll preselect a missing one per user where possible.</div>
       </div>
 
       <div class="card">
@@ -242,12 +250,14 @@
     let availableUsers = [];
     let availableQueues = [];
     let availableTeams = [];
+    let availableManagementUnits = [];
 
     // Checkbox dropdown instances (per tab) — mirrors Skills tool
     const dd = {
       agent: { remove:null, add:null },
       queue: { remove:null, add:null },
       team:  { remove:null, add:null },
+      managementUnit: { remove:null, add:null }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -276,7 +286,8 @@
         await Promise.all([
           fetchAllUsers(token),
           fetchAllQueues(token),
-          fetchAllTeams(token)
+          fetchAllTeams(token),
+          fetchAllManagementUnits(token)
         ]);
         createAllDropdowns();
         populateDropdownOptions();
@@ -326,6 +337,25 @@
         totalTeams = data.total || 0; pageNumber++;
       } while (allTeams.length < totalTeams);
       availableTeams = allTeams;
+    }
+
+    async function fetchAllManagementUnits(token) {
+      let allManagementUnits = [], pageNumber = 1, pageSize = 100, totalManagementUnits = 0;
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, { 
+          headers: { 
+            "Authorization": `Bearer ${token}`, 
+            "Content-Type": "application/json" 
+          }
+        });
+        if (!response.ok) throw new Error((await response.json()).message || "Failed to fetch management units");
+        const data = await response.json();
+        allManagementUnits = allManagementUnits.concat(data.entities || []);
+        totalManagementUnits = data.total || 0; 
+        pageNumber++;
+      } while (allManagementUnits.length < totalManagementUnits);
+      availableManagementUnits = allManagementUnits;
     }
 
     // ===== Checkbox dropdown (same as Skills tool) =====
@@ -430,6 +460,9 @@
       // Teams
       dd.team.remove  = createCheckboxDropdown('teamDropdownRemove',  { placeholder:'Select teams',  searchPlaceholder:'Search teams...' });
       dd.team.add     = createCheckboxDropdown('teamDropdownAdd',     { placeholder:'Select teams',  searchPlaceholder:'Search teams...' });
+      // Management Units
+      dd.managementUnit.remove = createCheckboxDropdown('managementUnitDropdownRemove', { placeholder:'Select management units', searchPlaceholder:'Search management units...' });
+      dd.managementUnit.add    = createCheckboxDropdown('managementUnitDropdownAdd',    { placeholder:'Select management units', searchPlaceholder:'Search management units...' });
     }
 
     function populateDropdownOptions(){
@@ -451,6 +484,13 @@
         .sort((a,b)=>a.label.localeCompare(b.label));
       dd.team.remove.setOptions(teamOpts);
       dd.team.add.setOptions(teamOpts);
+
+      // Management Units
+      const managementUnitOpts = (availableManagementUnits||[])
+        .map(mu => ({ value: mu.id, label: mu.name }))
+        .sort((a,b)=>a.label.localeCompare(b.label));
+      dd.managementUnit.remove.setOptions(managementUnitOpts);
+      dd.managementUnit.add.setOptions(managementUnitOpts);
     }
 
     function setupEventListeners(token) {
@@ -483,7 +523,7 @@
       });
     }
 
-    // ===== Helpers for team/queue membership =====
+    // ===== Helpers for team/queue/management unit membership =====
     async function fetchTeamMembers(teamId, token) {
       const url = `https://api.mypurecloud.ie/api/v2/teams/${teamId}/members`;
       const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
@@ -527,6 +567,36 @@
       return users;
     }
 
+    async function fetchManagementUnitUsers(managementUnitId, token) {
+      let allUsers = [], pageNumber = 1, pageSize = 100, totalUsers = 0;
+      do {
+        const url = `https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits/${managementUnitId}/users?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+        const response = await fetch(url, { 
+          headers: { 
+            "Authorization": `Bearer ${token}`, 
+            "Content-Type": "application/json" 
+          }
+        });
+        if (!response.ok) throw new Error((await response.json()).message || `Failed to fetch users for management unit ${managementUnitId}`);
+        const data = await response.json();
+        allUsers = allUsers.concat(data.entities || []);
+        totalUsers = data.total || 0; 
+        pageNumber++;
+      } while (allUsers.length < totalUsers);
+      return allUsers;
+    }
+
+    async function processManagementUnitMembers(managementUnitMembers) {
+      const users = [];
+      for (const member of managementUnitMembers) {
+        const userId = member.id;
+        if (!userId) continue;
+        const user = availableUsers.find(u => u.id === userId);
+        if (user && user.name && user.name.trim() !== '' && user.name !== 'Unknown User') users.push(user);
+      }
+      return users;
+    }
+
     async function fetchUserQueuesForUser(userId, token) {
       try {
         const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/queues`;
@@ -547,8 +617,9 @@
       const agentIds = dd.agent[mode].getSelectedValues();
       const queueIds = dd.queue[mode].getSelectedValues();
       const teamIds  = dd.team[mode].getSelectedValues();
+      const managementUnitIds = dd.managementUnit[mode].getSelectedValues();
 
-      if (agentIds.length === 0 && queueIds.length === 0 && teamIds.length === 0) {
+      if (agentIds.length === 0 && queueIds.length === 0 && teamIds.length === 0 && managementUnitIds.length === 0) {
         showMessage('Please select at least one search option.');
         return;
       }
@@ -570,6 +641,11 @@
         const allTeamMemberArrays = await Promise.all(teamIds.map(tid => fetchTeamMembers(tid, token)));
         const usersFromTeams = (await Promise.all(allTeamMemberArrays.map(arr => processTeamMembers(arr)))).flat();
         const map = new Map(); usersFromTeams.forEach(u=> map.set(u.id, u));
+        users = Array.from(map.values());
+      } else if (managementUnitIds.length){
+        const allManagementUnitMemberArrays = await Promise.all(managementUnitIds.map(muid => fetchManagementUnitUsers(muid, token)));
+        const usersFromManagementUnits = (await Promise.all(allManagementUnitMemberArrays.map(arr => processManagementUnitMembers(arr)))).flat();
+        const map = new Map(); usersFromManagementUnits.forEach(u=> map.set(u.id, u));
         users = Array.from(map.values());
       }
 
@@ -653,7 +729,7 @@
         const preselect = selectedQueueIds.find(id => choices.some(c=>c.id===id)) || '';
 
         let queueOptions = choices.length
-          ? ['<option value="">Select Queue to Add</option>', ...choices.map(q => `<option value="${q.id}" ${q.id===preselect?'selected':''}>${q.name}</option>`)].join('')
+          ? ['<option value="">Select Queue to Add</option>', ...choices.map(q => `<option value="${q.id}" ${q.id===preselect?'selected':''}>${q.name}</option>`)]
           : '<option value="">All Queues Assigned</option>';
 
         const row = document.createElement("tr");
