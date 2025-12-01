@@ -10,7 +10,8 @@
       --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
       --pill:#e9f6f0;
     }
-    body{font-family:'Segoe UI',Arial,sans-serif;margin:20px;padding:20px;max-width:1400px;background:var(--light-bg);color:var(--text-color)}
+    /* Aptos first, then fallbacks */
+    body{font-family:'Aptos','Segoe UI',system-ui,-apple-system,Arial,sans-serif;margin:20px;padding:20px;max-width:1400px;background:var(--light-bg);color:var(--text-color)}
     #logo-container{text-align:center;margin-bottom:20px} #logo{width:300px}
     h1{margin:0 0 16px}
     .card{background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:24px;margin-top:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
@@ -21,45 +22,8 @@
     .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:end}
     .full-width-btn{width:100%;padding:14px 18px;font-size:16px;margin-top:12px}
     .muted{color:var(--text-light);font-size:12px}
-    .user-info,.conversation-header,.transcript-summary{background:transparent;border:2px solid var(--primary-color);border-radius:10px;padding:16px;margin:12px 0}
-    details{background:var(--light-bg);border:1px solid var(--border-color);border-radius:8px;padding:16px;margin:12px 0}
-    details>summary{cursor:pointer;font-weight:600}
-    pre{background:#1f2937;color:#f3f4f6;padding:16px;border-radius:6px;overflow:auto;font-size:12px}
-    .stats{display:flex;gap:16px;margin:16px 0}
-    .stat-card{flex:1;border:1px solid var(--border-color);border-radius:8px;padding:16px;text-align:center;background:var(--card-bg)}
-    .stat-number{font-size:22px;color:#63AB8F;font-weight:700}
-    .journey-timeline{margin:20px 0 8px;padding-left:20px;border-left:3px solid var(--primary-color)}
-    .journey-step{margin-bottom:18px;position:relative}
-    .journey-step:before{content:'';position:absolute;left:-26px;top:0;width:16px;height:16px;border-radius:50%;background:var(--primary-color)}
-    .step-header{font-weight:700;color:var(--secondary-color);margin-bottom:8px}
-    .step-details{background:var(--card-bg);border:1px solid var(--border-color);border-radius:6px;padding:12px}
-    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-    .info-item{display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);padding:6px 0}
-    .info-label{font-weight:600;min-width:150px}
-    .participant-badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;margin:2px;border:1px solid var(--border-color);background:#fff}
-    .badge-customer{border-color:#a7e3c6;color:#1f7255}
-    .badge-agent{background:#dbeafe;color:#1e40af}
-    .badge-queue{background:#fde7ff;color:#7c3aed}
-    .transfer-info{background:#fff7ed;border:1px solid var(--border-color);border-radius:6px;padding:8px;margin:8px 0}
-    .transfer-count{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:6px;font-weight:700}
-    .progress-bar{width:100%;height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;margin:10px 0}
-    .progress-fill{height:100%;background:var(--primary-color);transition:width .3s}
-    .t-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 16px}
-    .t-kv{display:flex;gap:10px;justify-content:space-between}.t-kv .k{font-weight:700}
-    .pill{display:inline-block;background:var(--pill);border:1px solid var(--border-color);border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px}
-    .transcript-table{width:100%;border-collapse:collapse;margin-top:10px}
-    .transcript-table th,.transcript-table td{border-bottom:1px solid var(--border-color);padding:8px 10px;vertical-align:top}
-    .transcript-table th{background:var(--primary-color);color:#fff;text-align:left}
-    .sentiment-positive{color:#16a34a;font-weight:700}
-    .sentiment-negative{color:#dc2626;font-weight:700}
-    .sentiment-neutral{color:#f59e0b;font-weight:700}
-    .empathy-positive{color:#16a34a;font-weight:700}
-    .confidence-high{color:#16a34a;font-weight:700}
-    .confidence-medium{color:#f59e0b;font-weight:700}
-    .confidence-low{color:#dc2626;font-weight:700}
     .loading{opacity:.6;pointer-events:none}
-    .future-date{color:#ccc;cursor:not-allowed}
-
+    
     /* Selection section + tabs */
     .selection-section {
       margin-bottom: 20px;
@@ -109,6 +73,15 @@
       border: 1px solid #3c763d; border-radius: 4px; background-color: #dff0d8;
     }
 
+    /* Bulk section - same as skills tool */
+    .bulk-section{background:#f8f9fa;padding:20px;border-radius:8px;border:1px solid #dee2e6;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end}
+    .bulk-queue-selector{min-width:300px}
+    .bulk-action{min-width:180px}
+    
+    /* Small buttons */
+    .small-btn{padding:8px 16px;font-size:14px}
+    .tiny-btn{padding:4px 10px;font-size:12px;min-width:32px}
+    
     /* === Checkbox dropdown (mirrors Skills tool) === */
     .checkbox-dropdown{position:relative;min-width:240px;width:100%}
     .cd-trigger{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border-color);border-radius:6px;background:#fff;padding:10px;cursor:pointer;width:100%;box-sizing:border-box}
@@ -131,11 +104,21 @@
       .controls {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       }
+      .bulk-section {
+        grid-template-columns: 1fr;
+      }
     }
     
     @media (max-width: 768px) {
       .controls {
         grid-template-columns: 1fr;
+      }
+      .bulk-section {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      .bulk-action {
+        min-width: 100%;
       }
     }
   </style>
@@ -188,6 +171,17 @@
       </div>
 
       <div class="card">
+        <div class="bulk-section">
+          <div class="bulk-queue-selector">
+            <label>Apply to All Selected Users</label>
+            <div id="bulkQueueRemoveDropdown" class="checkbox-dropdown"></div>
+          </div>
+          <div class="bulk-action">
+            <label>&nbsp;</label>
+            <button id="applyBulkRemove" class="full-width-btn small-btn">Apply to Selected Users</button>
+          </div>
+        </div>
+        
         <h2 style="margin: 0 0 12px;">Queue Assignments - Remove</h2>
         <table id="userQueuesTableRemove">
           <thead>
@@ -235,6 +229,17 @@
       </div>
 
       <div class="card">
+        <div class="bulk-section">
+          <div class="bulk-queue-selector">
+            <label>Apply to All Selected Users</label>
+            <div id="bulkQueueAddDropdown" class="checkbox-dropdown"></div>
+          </div>
+          <div class="bulk-action">
+            <label>&nbsp;</label>
+            <button id="applyBulkAdd" class="full-width-btn small-btn">Apply to Selected Users</button>
+          </div>
+        </div>
+        
         <h2 style="margin: 0 0 12px;">Queue Assignments - Add</h2>
         <table id="userQueuesTableAdd">
           <thead>
@@ -265,12 +270,32 @@
     let availableTeams = [];
     let availableManagementUnits = [];
 
+    // Shared selections across tabs (same as skills tool)
+    const sharedSelections = {
+      agentIds: [],
+      queueIds: [],
+      teamIds: [],
+      managementUnitIds: []
+    };
+
+    // Store fetched user data globally (same as skills tool)
+    let currentFetchedData = {
+      usersWithQueues: [],
+      queueIds: []
+    };
+
     // Checkbox dropdown instances (per tab) — mirrors Skills tool
     const dd = {
       agent: { remove:null, add:null },
       queue: { remove:null, add:null },
       team:  { remove:null, add:null },
       managementUnit: { remove:null, add:null }
+    };
+
+    // Bulk dropdown instances (same as skills tool)
+    const bulkDd = {
+      remove: null,
+      add: null
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -294,6 +319,9 @@
       if (type === 'success') setTimeout(() => { messageContainer.style.display = 'none'; }, 5000);
     }
 
+    function authHeaders(){ return { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }; }
+    function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
     async function initializeApp(token) {
       try {
         await Promise.all([
@@ -303,8 +331,10 @@
           fetchAllManagementUnits(token)
         ]);
         createAllDropdowns();
+        createBulkDropdowns();
         populateDropdownOptions();
         setupEventListeners(token);
+        setupBulkControls();
       } catch (error) {
         console.error("Initialization error:", error);
         showMessage("Error initializing application. Please try again.");
@@ -317,7 +347,7 @@
       let allUsers = [], pageNumber = 1, pageSize = 100, totalUsers = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/users?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || "Failed to fetch users");
         const data = await response.json();
         allUsers = allUsers.concat(data.entities || []);
@@ -330,7 +360,7 @@
       let allQueues = [], pageNumber = 1, pageSize = 100, totalQueues = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/routing/queues?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || "Failed to fetch queues");
         const data = await response.json();
         allQueues = allQueues.concat(data.entities || []);
@@ -343,7 +373,7 @@
       let allTeams = [], pageNumber = 1, pageSize = 100, totalTeams = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/teams?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || "Failed to fetch teams");
         const data = await response.json();
         allTeams = allTeams.concat(data.entities || []);
@@ -356,12 +386,7 @@
       let allManagementUnits = [], pageNumber = 1, pageSize = 100, totalManagementUnits = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { 
-          headers: { 
-            "Authorization": `Bearer ${token}`, 
-            "Content-Type": "application/json" 
-          }
-        });
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || "Failed to fetch management units");
         const data = await response.json();
         allManagementUnits = allManagementUnits.concat(data.entities || []);
@@ -372,7 +397,7 @@
     }
 
     // ===== Checkbox dropdown (same as Skills tool) =====
-    function createCheckboxDropdown(containerId, { placeholder, searchPlaceholder }){
+    function createCheckboxDropdown(containerId, { placeholder, searchPlaceholder }, mode){
       const root = document.getElementById(containerId);
       root.innerHTML = '';
 
@@ -429,6 +454,7 @@
           cb.addEventListener('change', ()=>{
             if (cb.checked) selected.add(o.value); else selected.delete(o.value);
             updateSummary(); updateSelectAllState();
+            if (mode) updateSharedSelections(containerId, Array.from(selected), mode);
           });
           list.appendChild(row);
         });
@@ -446,36 +472,58 @@
       trigger.addEventListener('click', ()=>{ panel.classList.toggle('open'); search.focus(); });
       document.addEventListener('click', (e)=>{ if (!root.contains(e.target)) panel.classList.remove('open'); });
       search.addEventListener('input', ()=> render(search.value));
-      clearBtn.addEventListener('click', ()=>{ selected.clear(); render(search.value); updateSummary(); updateSelectAllState(); });
+      clearBtn.addEventListener('click', ()=>{ 
+        selected.clear(); 
+        render(search.value); 
+        updateSummary(); 
+        updateSelectAllState();
+        if (mode) updateSharedSelections(containerId, [], mode);
+      });
       selectAll.addEventListener('change', ()=>{
-        if (selectAll.checked) options.forEach(o=> selected.add(o.value)); else selected.clear();
-        render(search.value); updateSummary();
+        if (selectAll.checked) options.forEach(o=> selected.add(o.value)); 
+        else selected.clear();
+        render(search.value); 
+        updateSummary();
+        if (mode) updateSharedSelections(containerId, Array.from(selected), mode);
       });
 
       function setOptions(newOptions){
         options = newOptions || [];
         selected.forEach(v=>{ if (!options.some(o=>o.value===v)) selected.delete(v); });
-        render(search.value); updateSummary(); updateSelectAllState();
+        render(search.value); 
+        updateSummary(); 
+        updateSelectAllState();
       }
       function getSelectedValues(){ return Array.from(selected); }
+      function setSelectedValues(values){
+        selected = new Set(values);
+        render(search.value);
+        updateSummary();
+        updateSelectAllState();
+      }
 
       render('');
-      return { setOptions, getSelectedValues };
+      return { setOptions, getSelectedValues, setSelectedValues };
     }
 
     function createAllDropdowns(){
       // Agents
-      dd.agent.remove = createCheckboxDropdown('agentDropdownRemove', { placeholder:'Select agents', searchPlaceholder:'Search agents...' });
-      dd.agent.add    = createCheckboxDropdown('agentDropdownAdd',    { placeholder:'Select agents', searchPlaceholder:'Search agents...' });
+      dd.agent.remove = createCheckboxDropdown('agentDropdownRemove', { placeholder:'Select agents', searchPlaceholder:'Search agents...' }, 'remove');
+      dd.agent.add    = createCheckboxDropdown('agentDropdownAdd',    { placeholder:'Select agents', searchPlaceholder:'Search agents...' }, 'add');
       // Queues
-      dd.queue.remove = createCheckboxDropdown('queueDropdownRemove', { placeholder:'Select queues', searchPlaceholder:'Search queues...' });
-      dd.queue.add    = createCheckboxDropdown('queueDropdownAdd',    { placeholder:'Select queues', searchPlaceholder:'Search queues...' });
+      dd.queue.remove = createCheckboxDropdown('queueDropdownRemove', { placeholder:'Select queues', searchPlaceholder:'Search queues...' }, 'remove');
+      dd.queue.add    = createCheckboxDropdown('queueDropdownAdd',    { placeholder:'Select queues', searchPlaceholder:'Search queues...' }, 'add');
       // Teams
-      dd.team.remove  = createCheckboxDropdown('teamDropdownRemove',  { placeholder:'Select teams',  searchPlaceholder:'Search teams...' });
-      dd.team.add     = createCheckboxDropdown('teamDropdownAdd',     { placeholder:'Select teams',  searchPlaceholder:'Search teams...' });
+      dd.team.remove  = createCheckboxDropdown('teamDropdownRemove',  { placeholder:'Select teams',  searchPlaceholder:'Search teams...' }, 'remove');
+      dd.team.add     = createCheckboxDropdown('teamDropdownAdd',     { placeholder:'Select teams',  searchPlaceholder:'Search teams...' }, 'add');
       // Management Units
-      dd.managementUnit.remove = createCheckboxDropdown('managementUnitDropdownRemove', { placeholder:'Select management units', searchPlaceholder:'Search management units...' });
-      dd.managementUnit.add    = createCheckboxDropdown('managementUnitDropdownAdd',    { placeholder:'Select management units', searchPlaceholder:'Search management units...' });
+      dd.managementUnit.remove = createCheckboxDropdown('managementUnitDropdownRemove', { placeholder:'Select management units', searchPlaceholder:'Search management units...' }, 'remove');
+      dd.managementUnit.add    = createCheckboxDropdown('managementUnitDropdownAdd',    { placeholder:'Select management units', searchPlaceholder:'Search management units...' }, 'add');
+    }
+
+    function createBulkDropdowns(){
+      bulkDd.remove = createCheckboxDropdown('bulkQueueRemoveDropdown', { placeholder:'Select queues to remove', searchPlaceholder:'Search queues...' });
+      bulkDd.add = createCheckboxDropdown('bulkQueueAddDropdown', { placeholder:'Select queues to add', searchPlaceholder:'Search queues...' });
     }
 
     function populateDropdownOptions(){
@@ -491,6 +539,10 @@
         .sort((a,b)=>a.label.localeCompare(b.label));
       dd.queue.remove.setOptions(queueOpts);
       dd.queue.add.setOptions(queueOpts);
+      
+      // Populate bulk dropdowns
+      bulkDd.remove.setOptions(queueOpts);
+      bulkDd.add.setOptions(queueOpts);
 
       const teamOpts = (availableTeams||[])
         .map(t => ({ value: t.id, label: t.name }))
@@ -506,6 +558,148 @@
       dd.managementUnit.add.setOptions(managementUnitOpts);
     }
 
+    // ===== SHARED SELECTIONS (same as skills tool) =====
+    function updateSharedSelections(dropdownId, selectedValues, mode){
+      if (dropdownId.includes('agentDropdown')) {
+        sharedSelections.agentIds = selectedValues;
+        // Update other agent dropdowns
+        if (mode !== 'remove') dd.agent.remove.setSelectedValues(selectedValues);
+        if (mode !== 'add') dd.agent.add.setSelectedValues(selectedValues);
+      } else if (dropdownId.includes('queueDropdown')) {
+        sharedSelections.queueIds = selectedValues;
+        if (mode !== 'remove') dd.queue.remove.setSelectedValues(selectedValues);
+        if (mode !== 'add') dd.queue.add.setSelectedValues(selectedValues);
+      } else if (dropdownId.includes('teamDropdown')) {
+        sharedSelections.teamIds = selectedValues;
+        if (mode !== 'remove') dd.team.remove.setSelectedValues(selectedValues);
+        if (mode !== 'add') dd.team.add.setSelectedValues(selectedValues);
+      } else if (dropdownId.includes('managementUnitDropdown')) {
+        sharedSelections.managementUnitIds = selectedValues;
+        if (mode !== 'remove') dd.managementUnit.remove.setSelectedValues(selectedValues);
+        if (mode !== 'add') dd.managementUnit.add.setSelectedValues(selectedValues);
+      }
+    }
+
+    function syncSelectionsToCurrentTab(mode){
+      // Set dropdown values based on shared selections
+      dd.agent[mode].setSelectedValues(sharedSelections.agentIds);
+      dd.queue[mode].setSelectedValues(sharedSelections.queueIds);
+      dd.team[mode].setSelectedValues(sharedSelections.teamIds);
+      dd.managementUnit[mode].setSelectedValues(sharedSelections.managementUnitIds);
+      
+      // If we have fetched data, populate the table for the current tab
+      if (currentFetchedData.usersWithQueues.length > 0) {
+        populateTableForTab(mode);
+      }
+    }
+
+    function populateTableForTab(mode){
+      if (!currentFetchedData.usersWithQueues.length) return;
+      
+      if (mode === 'remove') {
+        populateRemoveTable(currentFetchedData.usersWithQueues);
+      } else if (mode === 'add') {
+        populateAddTable(currentFetchedData.usersWithQueues, currentFetchedData.queueIds);
+      }
+    }
+
+    // ===== BULK CONTROLS (same as skills tool) =====
+    function setupBulkControls(){
+      // Bulk apply buttons
+      document.getElementById('applyBulkRemove').addEventListener('click', applyBulkRemove);
+      document.getElementById('applyBulkAdd').addEventListener('click', applyBulkAdd);
+    }
+
+    async function applyBulkRemove(){
+      const bulkQueueIds = bulkDd.remove.getSelectedValues();
+      if (bulkQueueIds.length === 0) {
+        showMessage('Please select at least one queue to remove from the bulk dropdown.');
+        return;
+      }
+
+      const checkedBoxes = document.querySelectorAll('#userQueuesTableRemove tbody .user-checkbox-remove:checked');
+      if (checkedBoxes.length === 0) {
+        showMessage('Please select at least one user from the table.');
+        return;
+      }
+
+      const btn = document.getElementById('applyBulkRemove');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        
+        const ops = [];
+        checkedBoxes.forEach(cb => {
+          const userId = cb.getAttribute('data-user-id');
+          bulkQueueIds.forEach(queueId => {
+            ops.push({ userId, queueId });
+          });
+        });
+
+        const results = await Promise.allSettled(ops.map(op => removeQueueFromUser(op.userId, op.queueId)));
+        const fails = results.filter(r => r.status === 'rejected');
+        
+        if (fails.length) {
+          showMessage(`Bulk removal completed with ${fails.length} error(s).`);
+        } else {
+          showMessage(`Successfully removed ${bulkQueueIds.length} queue(s) from ${checkedBoxes.length} user(s).`, 'success');
+        }
+        
+        // Refresh all tables
+        await fetchUsers('remove');
+      } catch (e) {
+        showMessage(`Failed to apply bulk removal: ${e.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Apply to Selected Users';
+      }
+    }
+
+    async function applyBulkAdd(){
+      const bulkQueueIds = bulkDd.add.getSelectedValues();
+      if (bulkQueueIds.length === 0) {
+        showMessage('Please select at least one queue to add from the bulk dropdown.');
+        return;
+      }
+
+      const checkedBoxes = document.querySelectorAll('#userQueuesTableAdd tbody .user-checkbox-add:checked');
+      if (checkedBoxes.length === 0) {
+        showMessage('Please select at least one user from the table.');
+        return;
+      }
+
+      const btn = document.getElementById('applyBulkAdd');
+      try {
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        
+        const ops = [];
+        checkedBoxes.forEach(cb => {
+          const userId = cb.getAttribute('data-user-id');
+          bulkQueueIds.forEach(queueId => {
+            ops.push({ userId, queueId });
+          });
+        });
+
+        const results = await Promise.allSettled(ops.map(op => addQueueToUser(op.userId, op.queueId)));
+        const fails = results.filter(r => r.status === 'rejected');
+        
+        if (fails.length) {
+          showMessage(`Bulk addition completed with ${fails.length} error(s).`);
+        } else {
+          showMessage(`Successfully added ${bulkQueueIds.length} queue(s) to ${checkedBoxes.length} user(s).`, 'success');
+        }
+        
+        // Refresh all tables
+        await fetchUsers('add');
+      } catch (e) {
+        showMessage(`Failed to apply bulk addition: ${e.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Apply to Selected Users';
+      }
+    }
+
     function setupEventListeners(token) {
       // Tab switching
       document.querySelectorAll('.tab').forEach(tab => {
@@ -513,13 +707,17 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
           tab.classList.add('active');
-          document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+          const mode = tab.dataset.tab;
+          document.getElementById(mode + 'Tab').classList.add('active');
+          
+          // Sync selections when switching tabs
+          syncSelectionsToCurrentTab(mode);
         });
       });
 
       // Remove tab listeners
-      document.getElementById('fetchUsersRemove').addEventListener('click', () => fetchUsers('remove', token));
-      document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues(token));
+      document.getElementById('fetchUsersRemove').addEventListener('click', () => fetchUsers('remove'));
+      document.getElementById('removeQueues').addEventListener('click', () => removeSelectedQueues());
       document.getElementById('selectAllUsersRemove').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('#userQueuesTableRemove tbody input[type="checkbox"]');
         checkboxes.forEach(checkbox => { checkbox.checked = this.checked; });
@@ -527,8 +725,8 @@
       });
 
       // Add tab listeners
-      document.getElementById('fetchUsersAdd').addEventListener('click', () => fetchUsers('add', token));
-      document.getElementById('addQueues').addEventListener('click', () => addSelectedQueues(token));
+      document.getElementById('fetchUsersAdd').addEventListener('click', () => fetchUsers('add'));
+      document.getElementById('addQueues').addEventListener('click', () => addSelectedQueues());
       document.getElementById('selectAllUsersAdd').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('#userQueuesTableAdd tbody input[type="checkbox"]');
         checkboxes.forEach(checkbox => { checkbox.checked = this.checked; });
@@ -537,9 +735,9 @@
     }
 
     // ===== Helpers for team/queue/management unit membership =====
-    async function fetchTeamMembers(teamId, token) {
+    async function fetchTeamMembers(teamId) {
       const url = `https://api.mypurecloud.ie/api/v2/teams/${teamId}/members`;
-      const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+      const response = await fetch(url, { headers: authHeaders() });
       if (!response.ok) throw new Error((await response.json()).message || `Failed to fetch members for team ${teamId}`);
       const data = await response.json();
       return data.entities || [];
@@ -556,11 +754,11 @@
       return users;
     }
 
-    async function fetchQueueMembersForQueue(queueId, token) {
+    async function fetchQueueMembersForQueue(queueId) {
       let allMembers = [], pageNumber = 1, pageSize = 100, totalMembers = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || `Failed to fetch members for queue ${queueId}`);
         const data = await response.json();
         allMembers = allMembers.concat(data.entities || []);
@@ -580,16 +778,11 @@
       return users;
     }
 
-    async function fetchManagementUnitUsers(managementUnitId, token) {
+    async function fetchManagementUnitUsers(managementUnitId) {
       let allUsers = [], pageNumber = 1, pageSize = 100, totalUsers = 0;
       do {
         const url = `https://api.mypurecloud.ie/api/v2/workforcemanagement/managementunits/${managementUnitId}/users?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        const response = await fetch(url, { 
-          headers: { 
-            "Authorization": `Bearer ${token}`, 
-            "Content-Type": "application/json" 
-          }
-        });
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) throw new Error((await response.json()).message || `Failed to fetch users for management unit ${managementUnitId}`);
         const data = await response.json();
         allUsers = allUsers.concat(data.entities || []);
@@ -610,10 +803,10 @@
       return users;
     }
 
-    async function fetchUserQueuesForUser(userId, token) {
+    async function fetchUserQueuesForUser(userId) {
       try {
         const url = `https://api.mypurecloud.ie/api/v2/users/${userId}/queues`;
-        const response = await fetch(url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }});
+        const response = await fetch(url, { headers: authHeaders() });
         if (!response.ok) { if (response.status === 404) return []; throw new Error((await response.json()).message || `Failed to fetch queues for user ${userId}`); }
         const data = await response.json();
         return data.entities || [];
@@ -624,9 +817,7 @@
     }
 
     // ===== Search (mirrors Skills tool flow) =====
-    function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
-
-    async function fetchUsers(mode, token) {
+    async function fetchUsers(mode) {
       const agentIds = dd.agent[mode].getSelectedValues();
       const queueIds = dd.queue[mode].getSelectedValues();
       const teamIds  = dd.team[mode].getSelectedValues();
@@ -646,17 +837,17 @@
       if (agentIds.length){
         users = agentIds.map(id => validUsers.find(u => u.id === id)).filter(Boolean);
       } else if (queueIds.length){
-        const allMemberArrays = await Promise.all(queueIds.map(qid => fetchQueueMembersForQueue(qid, token)));
+        const allMemberArrays = await Promise.all(queueIds.map(qid => fetchQueueMembersForQueue(qid)));
         const usersFromQueues = (await Promise.all(allMemberArrays.map(arr => processQueueMembers(arr)))).flat();
         const map = new Map(); usersFromQueues.forEach(u=> map.set(u.id, u));
         users = Array.from(map.values());
       } else if (teamIds.length){
-        const allTeamMemberArrays = await Promise.all(teamIds.map(tid => fetchTeamMembers(tid, token)));
+        const allTeamMemberArrays = await Promise.all(teamIds.map(tid => fetchTeamMembers(tid)));
         const usersFromTeams = (await Promise.all(allTeamMemberArrays.map(arr => processTeamMembers(arr)))).flat();
         const map = new Map(); usersFromTeams.forEach(u=> map.set(u.id, u));
         users = Array.from(map.values());
       } else if (managementUnitIds.length){
-        const allManagementUnitMemberArrays = await Promise.all(managementUnitIds.map(muid => fetchManagementUnitUsers(muid, token)));
+        const allManagementUnitMemberArrays = await Promise.all(managementUnitIds.map(muid => fetchManagementUnitUsers(muid)));
         const usersFromManagementUnits = (await Promise.all(allManagementUnitMemberArrays.map(arr => processManagementUnitMembers(arr)))).flat();
         const map = new Map(); usersFromManagementUnits.forEach(u=> map.set(u.id, u));
         users = Array.from(map.values());
@@ -670,17 +861,36 @@
 
       const usersWithQueues = await Promise.all(
         users.map(async (user) => {
-          const queues = await fetchUserQueuesForUser(user.id, token);
+          const queues = await fetchUserQueuesForUser(user.id);
           return { user, queues };
         })
       );
 
-      if (mode === 'remove') {
-        populateRemoveTable(usersWithQueues);
+      // Filter by selected queues for remove tab
+      let filtered;
+      if (queueIds.length){
+        const hasAny = (queues)=> queues.some(q => queueIds.includes(q.id));
+        const hasAll = (queues)=> queueIds.every(id => queues.some(q=>q.id===id));
+        if (mode === 'remove'){
+          // Keep users who have ANY of the selected queues
+          filtered = usersWithQueues.filter(({queues})=> hasAny(queues));
+        } else {
+          // add: keep users who are missing AT LEAST one selected queue
+          filtered = usersWithQueues.filter(({queues})=> !hasAll(queues));
+        }
       } else {
-        // Pass selected queueIds so we can preselect one per user if available
-        populateAddTable(usersWithQueues, queueIds);
+        filtered = usersWithQueues;
       }
+
+      // Store the fetched data globally
+      currentFetchedData = {
+        usersWithQueues: filtered,
+        queueIds: queueIds
+      };
+
+      // Populate all tables
+      populateRemoveTable(filtered);
+      populateAddTable(filtered, queueIds);
     }
 
     // ===== Tables & button state =====
@@ -690,6 +900,7 @@
 
       if (usersWithQueues.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        updateRemoveButtonState();
         return;
       }
 
@@ -731,6 +942,7 @@
 
       if (usersWithQueues.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+        updateAddButtonState();
         return;
       }
 
@@ -798,7 +1010,7 @@
     }
 
     // ===== Actions =====
-    async function removeSelectedQueues(token) {
+    async function removeSelectedQueues() {
       const checkedUsers = document.querySelectorAll('.user-checkbox-remove:checked');
       const operations = [];
 
@@ -817,14 +1029,14 @@
         removeButton.textContent = 'Processing...';
 
         const results = await Promise.allSettled(
-          operations.map(op => removeQueueFromUser(op.userId, op.queueId, token))
+          operations.map(op => removeQueueFromUser(op.userId, op.queueId))
         );
 
         const failures = results.filter(result => result.status === 'rejected');
         if (failures.length > 0) showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
         else showMessage('All queue removals completed successfully!', 'success');
 
-        await fetchUsers('remove', token);
+        await fetchUsers('remove');
       } catch (error) {
         console.error("Error removing queues:", error);
         showMessage(`Failed to remove queues: ${error.message}`);
@@ -835,7 +1047,7 @@
       }
     }
 
-    async function addSelectedQueues(token) {
+    async function addSelectedQueues() {
       const checkedUsers = document.querySelectorAll('.user-checkbox-add:checked');
       const operations = [];
 
@@ -857,7 +1069,7 @@
         addButton.textContent = 'Processing...';
 
         const results = await Promise.allSettled(
-          operations.map(op => addQueueToUser(op.userId, op.queueId, token))
+          operations.map(op => addQueueToUser(op.userId, op.queueId))
         );
 
         const failures = results.filter(result => result.status === 'rejected');
@@ -868,7 +1080,7 @@
           showMessage('All queue additions completed successfully!', 'success');
         }
 
-        await fetchUsers('add', token);
+        await fetchUsers('add');
       } catch (error) {
         console.error("Error adding queues:", error);
         showMessage(`Failed to add queues: ${error.message}`);
@@ -879,22 +1091,22 @@
       }
     }
 
-    async function removeQueueFromUser(userId, queueId, token) {
+    async function removeQueueFromUser(userId, queueId) {
       const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`;
       const response = await fetch(url, {
         method: 'DELETE',
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+        headers: authHeaders()
       });
       if (!response.ok) throw new Error((await response.json()).message || `Failed to remove queue ${queueId} from user ${userId}`);
       return { userId, queueId, success: true };
     }
 
-    async function addQueueToUser(userId, queueId, token) {
+    async function addQueueToUser(userId, queueId) {
       const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members`;
       const body = [ { id: userId } ];
       const response = await fetch(url, {
         method: 'POST',
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify(body)
       });
       if (!response.ok) throw new Error((await response.json()).message || `Failed to add queue ${queueId} to user ${userId}`);
