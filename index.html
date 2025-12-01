@@ -74,13 +74,19 @@
     }
 
     /* Bulk section - same as skills tool */
-    .bulk-section{background:#f8f9fa;padding:20px;border-radius:8px;border:1px solid #dee2e6;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end}
+    .bulk-section{background:#f8f9fa;padding:20px;border-radius:8px;border:1px solid #dee2e6;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start}
     .bulk-queue-selector{min-width:300px}
-    .bulk-action{min-width:180px}
+    .bulk-action{min-width:180px;display:flex;flex-direction:column;gap:10px}
     
     /* Small buttons */
     .small-btn{padding:8px 16px;font-size:14px}
     .tiny-btn{padding:4px 10px;font-size:12px;min-width:32px}
+    
+    /* Selection display */
+    .selected-queues-display{margin-top:8px;padding:10px;background:#fff;border:1px solid #dee2e6;border-radius:6px;max-height:100px;overflow-y:auto;font-size:13px}
+    .selected-queue-item{display:inline-block;background:var(--pill);border:1px solid var(--border-color);border-radius:4px;padding:4px 8px;margin:2px;font-size:12px}
+    .refresh-btn{background:#6c757d;margin-top:8px}
+    .refresh-btn:hover{background:#5a6268}
     
     /* === Checkbox dropdown (mirrors Skills tool) === */
     .checkbox-dropdown{position:relative;min-width:240px;width:100%}
@@ -175,10 +181,13 @@
           <div class="bulk-queue-selector">
             <label>Apply to All Selected Users</label>
             <div id="bulkQueueRemoveDropdown" class="checkbox-dropdown"></div>
+            <div class="selected-queues-display" id="bulkRemoveDisplay">
+              <div class="muted">No queues selected</div>
+            </div>
           </div>
           <div class="bulk-action">
-            <label>&nbsp;</label>
             <button id="applyBulkRemove" class="full-width-btn small-btn">Apply to Selected Users</button>
+            <button id="refreshRemove" class="full-width-btn small-btn refresh-btn">Refresh View</button>
           </div>
         </div>
         
@@ -233,10 +242,13 @@
           <div class="bulk-queue-selector">
             <label>Apply to All Selected Users</label>
             <div id="bulkQueueAddDropdown" class="checkbox-dropdown"></div>
+            <div class="selected-queues-display" id="bulkAddDisplay">
+              <div class="muted">No queues selected</div>
+            </div>
           </div>
           <div class="bulk-action">
-            <label>&nbsp;</label>
             <button id="applyBulkAdd" class="full-width-btn small-btn">Apply to Selected Users</button>
+            <button id="refreshAdd" class="full-width-btn small-btn refresh-btn">Refresh View</button>
           </div>
         </div>
         
@@ -397,7 +409,7 @@
     }
 
     // ===== Checkbox dropdown (same as Skills tool) =====
-    function createCheckboxDropdown(containerId, { placeholder, searchPlaceholder }, mode){
+    function createCheckboxDropdown(containerId, { placeholder, searchPlaceholder }, mode, isBulk = false){
       const root = document.getElementById(containerId);
       root.innerHTML = '';
 
@@ -455,6 +467,7 @@
             if (cb.checked) selected.add(o.value); else selected.delete(o.value);
             updateSummary(); updateSelectAllState();
             if (mode) updateSharedSelections(containerId, Array.from(selected), mode);
+            if (isBulk) updateBulkQueueDisplay();
           });
           list.appendChild(row);
         });
@@ -478,6 +491,7 @@
         updateSummary(); 
         updateSelectAllState();
         if (mode) updateSharedSelections(containerId, [], mode);
+        if (isBulk) updateBulkQueueDisplay();
       });
       selectAll.addEventListener('change', ()=>{
         if (selectAll.checked) options.forEach(o=> selected.add(o.value)); 
@@ -485,6 +499,7 @@
         render(search.value); 
         updateSummary();
         if (mode) updateSharedSelections(containerId, Array.from(selected), mode);
+        if (isBulk) updateBulkQueueDisplay();
       });
 
       function setOptions(newOptions){
@@ -522,8 +537,8 @@
     }
 
     function createBulkDropdowns(){
-      bulkDd.remove = createCheckboxDropdown('bulkQueueRemoveDropdown', { placeholder:'Select queues to remove', searchPlaceholder:'Search queues...' });
-      bulkDd.add = createCheckboxDropdown('bulkQueueAddDropdown', { placeholder:'Select queues to add', searchPlaceholder:'Search queues...' });
+      bulkDd.remove = createCheckboxDropdown('bulkQueueRemoveDropdown', { placeholder:'Select queues to remove', searchPlaceholder:'Search queues...' }, null, true);
+      bulkDd.add = createCheckboxDropdown('bulkQueueAddDropdown', { placeholder:'Select queues to add', searchPlaceholder:'Search queues...' }, null, true);
     }
 
     function populateDropdownOptions(){
@@ -558,6 +573,36 @@
       dd.managementUnit.add.setOptions(managementUnitOpts);
     }
 
+    // ===== Update bulk queue display =====
+    function updateBulkQueueDisplay() {
+      // Update remove tab display
+      const removeQueueIds = bulkDd.remove.getSelectedValues();
+      const removeDisplay = document.getElementById('bulkRemoveDisplay');
+      updateQueueDisplay(removeDisplay, removeQueueIds);
+      
+      // Update add tab display
+      const addQueueIds = bulkDd.add.getSelectedValues();
+      const addDisplay = document.getElementById('bulkAddDisplay');
+      updateQueueDisplay(addDisplay, addQueueIds);
+    }
+    
+    function updateQueueDisplay(displayElement, queueIds) {
+      if (!queueIds || queueIds.length === 0) {
+        displayElement.innerHTML = '<div class="muted">No queues selected</div>';
+        return;
+      }
+      
+      // Get queue names
+      const queueNames = queueIds.map(id => {
+        const queue = availableQueues.find(q => q.id === id);
+        return queue ? queue.name : `Unknown (${id})`;
+      });
+      
+      displayElement.innerHTML = queueNames.map(name => 
+        `<div class="selected-queue-item">${name}</div>`
+      ).join('');
+    }
+
     // ===== SHARED SELECTIONS (same as skills tool) =====
     function updateSharedSelections(dropdownId, selectedValues, mode){
       if (dropdownId.includes('agentDropdown')) {
@@ -587,6 +632,9 @@
       dd.team[mode].setSelectedValues(sharedSelections.teamIds);
       dd.managementUnit[mode].setSelectedValues(sharedSelections.managementUnitIds);
       
+      // Update bulk queue display
+      updateBulkQueueDisplay();
+      
       // If we have fetched data, populate the table for the current tab
       if (currentFetchedData.usersWithQueues.length > 0) {
         populateTableForTab(mode);
@@ -608,6 +656,26 @@
       // Bulk apply buttons
       document.getElementById('applyBulkRemove').addEventListener('click', applyBulkRemove);
       document.getElementById('applyBulkAdd').addEventListener('click', applyBulkAdd);
+      
+      // Refresh buttons
+      document.getElementById('refreshRemove').addEventListener('click', () => refreshCurrentView('remove'));
+      document.getElementById('refreshAdd').addEventListener('click', () => refreshCurrentView('add'));
+    }
+
+    async function refreshCurrentView(mode) {
+      if (!currentFetchedData.usersWithQueues.length) {
+        showMessage('No data to refresh. Please fetch users first.');
+        return;
+      }
+      
+      try {
+        // Re-fetch the current view
+        await fetchUsers(mode);
+        showMessage('View refreshed successfully!', 'success');
+      } catch (error) {
+        console.error("Error refreshing view:", error);
+        showMessage('Failed to refresh view. Please try again.');
+      }
     }
 
     async function applyBulkRemove(){
@@ -622,6 +690,12 @@
         showMessage('Please select at least one user from the table.');
         return;
       }
+
+      // Get queue names for display
+      const queueNames = bulkQueueIds.map(id => {
+        const queue = availableQueues.find(q => q.id === id);
+        return queue ? queue.name : `Unknown (${id})`;
+      }).join(', ');
 
       const btn = document.getElementById('applyBulkRemove');
       try {
@@ -642,7 +716,7 @@
         if (fails.length) {
           showMessage(`Bulk removal completed with ${fails.length} error(s).`);
         } else {
-          showMessage(`Successfully removed ${bulkQueueIds.length} queue(s) from ${checkedBoxes.length} user(s).`, 'success');
+          showMessage(`Successfully removed queue(s): ${queueNames} from ${checkedBoxes.length} user(s).`, 'success');
         }
         
         // Refresh all tables
@@ -668,6 +742,12 @@
         return;
       }
 
+      // Get queue names for display
+      const queueNames = bulkQueueIds.map(id => {
+        const queue = availableQueues.find(q => q.id === id);
+        return queue ? queue.name : `Unknown (${id})`;
+      }).join(', ');
+
       const btn = document.getElementById('applyBulkAdd');
       try {
         btn.disabled = true;
@@ -687,7 +767,7 @@
         if (fails.length) {
           showMessage(`Bulk addition completed with ${fails.length} error(s).`);
         } else {
-          showMessage(`Successfully added ${bulkQueueIds.length} queue(s) to ${checkedBoxes.length} user(s).`, 'success');
+          showMessage(`Successfully added queue(s): ${queueNames} to ${checkedBoxes.length} user(s).`, 'success');
         }
         
         // Refresh all tables
@@ -1033,8 +1113,17 @@
         );
 
         const failures = results.filter(result => result.status === 'rejected');
-        if (failures.length > 0) showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
-        else showMessage('All queue removals completed successfully!', 'success');
+        if (failures.length > 0) {
+          showMessage(`Completed with ${failures.length} error(s). Check console for details.`);
+        } else {
+          // Get queue names for display
+          const queueNames = operations.map(op => {
+            const queue = availableQueues.find(q => q.id === op.queueId);
+            return queue ? queue.name : `Unknown (${op.queueId})`;
+          }).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+          
+          showMessage(`Successfully removed queue(s): ${queueNames} from ${operations.length} user(s).`, 'success');
+        }
 
         await fetchUsers('remove');
       } catch (error) {
@@ -1077,7 +1166,13 @@
           const errorMessages = failures.map(f => f.reason?.message || 'Unknown error').join(', ');
           showMessage(`Completed with ${failures.length} error(s): ${errorMessages}`);
         } else {
-          showMessage('All queue additions completed successfully!', 'success');
+          // Get queue names for display
+          const queueNames = operations.map(op => {
+            const queue = availableQueues.find(q => q.id === op.queueId);
+            return queue ? queue.name : `Unknown (${op.queueId})`;
+          }).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+          
+          showMessage(`Successfully added queue(s): ${queueNames} to ${operations.length} user(s).`, 'success');
         }
 
         await fetchUsers('add');
