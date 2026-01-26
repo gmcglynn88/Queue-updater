@@ -40,7 +40,7 @@
 
     .controls{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       gap:16px;align-items:end
     }
 
@@ -140,11 +140,12 @@
     .refresh-btn:hover{background:#5a6268}
 
     /* === CHECKBOX DROPDOWN === */
-    .checkbox-dropdown{position:relative;min-width:240px;width:100%}
+    .checkbox-dropdown{position:relative;min-width:220px;width:100%}
     .cd-trigger{
       display:flex;align-items:center;justify-content:space-between;
       border:1px solid var(--border-color);border-radius:6px;
       background:#fff;padding:10px;cursor:pointer;width:100%;
+      box-sizing:border-box;
     }
     .cd-trigger .label{color:var(--text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
     .cd-trigger .count{
@@ -157,7 +158,8 @@
       position:absolute;z-index:1000;margin-top:6px;background:#fff;
       border:1px solid var(--border-color);border-radius:8px;
       box-shadow:0 8px 24px rgba(0,0,0,.12);width:100%;
-      max-height:340px;overflow:hidden;display:none
+      max-height:340px;overflow:hidden;display:none;
+      box-sizing:border-box;
     }
     .cd-panel.open{display:block}
 
@@ -169,9 +171,10 @@
       flex:1;border:1px solid var(--border-color);border-radius:6px;
       padding:8px;width:100%;box-sizing:border-box
     }
+    .cd-actions{display:flex;gap:8px}
     .cd-actions button{
       background:#eef6f2;color:#2c3e50;border:1px solid var(--border-color);
-      border-radius:6px;padding:8px 10px;cursor:pointer;
+      border-radius:6px;padding:8px 10px;cursor:pointer;white-space:nowrap
     }
 
     .cd-selectall{
@@ -184,6 +187,10 @@
       display:flex;align-items:center;gap:10px;
       padding:8px 12px;border-bottom:1px solid #f1f3f5
     }
+    .cd-item label{
+      display:flex;align-items:center;gap:10px;
+      cursor:pointer;width:100%
+    }
 
     .cd-footer{
       padding:8px 12px;background:#fafafa;border-top:1px solid var(--border-color);
@@ -191,8 +198,8 @@
     }
 
     @media (max-width:1200px){
-      .controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-      .bulk-section{grid-template-columns:1fr}
+      .controls{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+      .bulk-section{grid-template-columns:1fr auto}
     }
     @media (max-width:768px){
       .controls{grid-template-columns:1fr}
@@ -222,11 +229,26 @@
         <h3>Search Options</h3>
 
         <div class="controls">
-          <div><label>Select Management Units</label><div id="managementUnitDropdownRemove" class="checkbox-dropdown"></div></div>
-          <div><label>Select Agents</label><div id="agentDropdownRemove" class="checkbox-dropdown"></div></div>
-          <div><label>Select Queues</label><div id="queueDropdownRemove" class="checkbox-dropdown"></div></div>
-          <div><label>Select Work Teams</label><div id="teamDropdownRemove" class="checkbox-dropdown"></div></div>
-          <div><label>&nbsp;</label><button id="fetchUsersRemove" class="full-width-btn">Get Users</button></div>
+          <div>
+            <label>Select Management Units</label>
+            <div id="managementUnitDropdownRemove" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Agents</label>
+            <div id="agentDropdownRemove" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Queues</label>
+            <div id="queueDropdownRemove" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Work Teams</label>
+            <div id="teamDropdownRemove" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersRemove" class="full-width-btn">Get Users</button>
+          </div>
         </div>
 
         <div class="muted">Make your selections above and click Get Users</div>
@@ -273,11 +295,26 @@
         <h3>Search Options</h3>
 
         <div class="controls">
-          <div><label>Select Management Units</label><div id="managementUnitDropdownAdd" class="checkbox-dropdown"></div></div>
-          <div><label>Select Agents</label><div id="agentDropdownAdd" class="checkbox-dropdown"></div></div>
-          <div><label>Select Queues</label><div id="queueDropdownAdd" class="checkbox-dropdown"></div></div>
-          <div><label>Select Work Teams</label><div id="teamDropdownAdd" class="checkbox-dropdown"></div></div>
-          <div><label>&nbsp;</label><button id="fetchUsersAdd" class="full-width-btn">Get Users</button></div>
+          <div>
+            <label>Select Management Units</label>
+            <div id="managementUnitDropdownAdd" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Agents</label>
+            <div id="agentDropdownAdd" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Queues</label>
+            <div id="queueDropdownAdd" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Work Teams</label>
+            <div id="teamDropdownAdd" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersAdd" class="full-width-btn">Get Users</button>
+          </div>
         </div>
 
         <div class="muted">Filtered by queues? Users missing that queue will be highlighted.</div>
