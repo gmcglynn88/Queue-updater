@@ -940,8 +940,17 @@
       document.querySelectorAll('.user-checkbox-remove').forEach(cb=>{
         cb.addEventListener('change',updateRemoveButtonState);
       });
+      
       document.querySelectorAll('.queue-select-remove').forEach(sel=>{
-        sel.addEventListener('change',updateRemoveButtonState);
+        // Auto-check when a queue is selected
+        sel.addEventListener('change',function(){
+          const userId = this.getAttribute('data-user-id');
+          if (this.value) {
+            const checkbox = document.querySelector(`.user-checkbox-remove[data-user-id="${userId}"]`);
+            if (checkbox) checkbox.checked = true;
+          }
+          updateRemoveButtonState();
+        });
       });
 
       updateRemoveButtonState();
@@ -999,8 +1008,17 @@
       document.querySelectorAll('.user-checkbox-add').forEach(cb=>{
         cb.addEventListener('change',updateAddButtonState);
       });
+      
       document.querySelectorAll('.queue-select-add').forEach(sel=>{
-        sel.addEventListener('change',updateAddButtonState);
+        // Auto-check when a queue is selected
+        sel.addEventListener('change',function(){
+          const userId = this.getAttribute('data-user-id');
+          if (this.value) {
+            const checkbox = document.querySelector(`.user-checkbox-add[data-user-id="${userId}"]`);
+            if (checkbox) checkbox.checked = true;
+          }
+          updateAddButtonState();
+        });
       });
 
       updateAddButtonState();
