@@ -7,7 +7,8 @@
     :root{
       --primary-color:#63AB8F; --secondary-color:#4A8C7D; --border-color:#DEE2E6;
       --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
-      --pill:#e9f6f0;
+      --pill:#e9f6f0; --warning-bg:#fff3cd; --warning-border:#ffeeba; --warning-text:#856404;
+      --success-bg:#d4edda; --success-border:#c3e6cb; --success-text:#155724;
     }
 
     body{
@@ -197,6 +198,29 @@
       font-size:12px;color:var(--text-light);display:flex;justify-content:space-between
     }
 
+    /* === ACTIVATION/DEACTIVATION SPECIFIC === */
+    .status-badge{
+      display:inline-block;padding:4px 8px;border-radius:999px;
+      font-size:12px;font-weight:600;text-align:center;
+    }
+    .status-active{
+      background:#d4edda;color:#155724;border:1px solid #c3e6cb;
+    }
+    .status-inactive{
+      background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;
+    }
+    .queue-membership-status{
+      font-size:12px;margin-left:8px;color:var(--text-light);
+      font-weight:normal;
+    }
+    .queue-item{
+      display:inline-flex;align-items:center;margin:2px;padding:4px 8px;
+      background:var(--pill);border-radius:4px;border:1px solid var(--border-color);
+    }
+    .queue-list{
+      display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;
+    }
+
     @media (max-width:1200px){
       .controls{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
       .bulk-section{grid-template-columns:1fr auto}
@@ -220,6 +244,7 @@
     <div class="tab-container">
       <div class="tab active" data-tab="remove">Remove Queues</div>
       <div class="tab" data-tab="add">Add Queues</div>
+      <div class="tab" data-tab="activate">Activate/Deactivate</div>
     </div>
 
     <!-- REMOVE TAB -->
@@ -355,6 +380,89 @@
       </div>
     </div>
 
+    <!-- ACTIVATE/DEACTIVATE TAB -->
+    <div id="activateTab" class="tab-content">
+
+      <div class="selection-section">
+        <h3>Search Options</h3>
+
+        <div class="controls">
+          <div>
+            <label>Select Management Units</label>
+            <div id="managementUnitDropdownActivate" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Agents</label>
+            <div id="agentDropdownActivate" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Queues</label>
+            <div id="queueDropdownActivate" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Select Work Teams</label>
+            <div id="teamDropdownActivate" class="checkbox-dropdown"></div>
+          </div>
+          <div>
+            <label>Filter by Status</label>
+            <select id="statusFilterActivate" style="width:100%;">
+              <option value="all">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive Only</option>
+            </select>
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <button id="fetchUsersActivate" class="full-width-btn">Get Users</button>
+          </div>
+        </div>
+
+        <div class="muted">Shows users with queue assignments and their activation status</div>
+      </div>
+
+      <div class="card">
+
+        <div class="bulk-section">
+          <div class="bulk-queue-selector">
+            <label>Bulk Action Queue</label>
+            <select id="bulkQueueActivate" style="width:100%;">
+              <option value="">Select a queue</option>
+            </select>
+            <div class="selected-queues-display" id="bulkActivateDisplay">
+              <div class="muted">Select a queue for bulk action</div>
+            </div>
+          </div>
+
+          <div class="bulk-action" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button id="applyBulkActivate" class="full-width-btn small-btn" style="background: #4A8C7D;">Activate All</button>
+            <button id="applyBulkDeactivate" class="full-width-btn small-btn" style="background: #d9534f;">Deactivate All</button>
+            <button id="refreshActivate" class="full-width-btn small-btn refresh-btn" style="grid-column:span 2;">Refresh View</button>
+          </div>
+        </div>
+
+        <h2>Queue Activation Status</h2>
+        <p class="muted">Use checkboxes to select specific user-queue pairs. Click Activate/Deactivate to toggle their status.</p>
+
+        <table id="userQueuesTableActivate">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAllUsersActivate" class="select-all-checkbox"></th>
+              <th>Agent</th>
+              <th>Queue</th>
+              <th>Current Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;">
+          <button id="activateSelected" class="full-width-btn" style="background: #4A8C7D;" disabled>Activate Selected</button>
+          <button id="deactivateSelected" class="full-width-btn" style="background: #d9534f;" disabled>Deactivate Selected</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -379,11 +487,16 @@
       queueIds: []
     };
 
+    // Activation data - stores membership status for each user-queue pair
+    let activationData = {
+      memberships: [] // Array of {userId, queueId, joined}
+    };
+
     const dd = {
-      agent:{remove:null,add:null},
-      queue:{remove:null,add:null},
-      team:{remove:null,add:null},
-      managementUnit:{remove:null,add:null}
+      agent:{remove:null,add:null,activate:null},
+      queue:{remove:null,add:null,activate:null},
+      team:{remove:null,add:null,activate:null},
+      managementUnit:{remove:null,add:null,activate:null}
     };
 
     const bulkDd = { remove:null, add:null };
@@ -428,6 +541,7 @@
         createAllDropdowns();
         createBulkDropdowns();
         populateDropdownOptions();
+        populateActivateQueueDropdown();
         setupEventListeners();
         setupBulkControls();
 
@@ -608,15 +722,19 @@
     function createAllDropdowns(){
       dd.agent.remove = createCheckboxDropdown('agentDropdownRemove',{placeholder:'Select agents',searchPlaceholder:'Search agents...'},'remove');
       dd.agent.add    = createCheckboxDropdown('agentDropdownAdd',{placeholder:'Select agents',searchPlaceholder:'Search agents...'},'add');
+      dd.agent.activate = createCheckboxDropdown('agentDropdownActivate',{placeholder:'Select agents',searchPlaceholder:'Search agents...'},'activate');
 
       dd.queue.remove = createCheckboxDropdown('queueDropdownRemove',{placeholder:'Select queues',searchPlaceholder:'Search queues...'},'remove');
       dd.queue.add    = createCheckboxDropdown('queueDropdownAdd',{placeholder:'Select queues',searchPlaceholder:'Search queues...'},'add');
+      dd.queue.activate = createCheckboxDropdown('queueDropdownActivate',{placeholder:'Select queues',searchPlaceholder:'Search queues...'},'activate');
 
       dd.team.remove  = createCheckboxDropdown('teamDropdownRemove',{placeholder:'Select teams',searchPlaceholder:'Search teams...'},'remove');
       dd.team.add     = createCheckboxDropdown('teamDropdownAdd',{placeholder:'Select teams',searchPlaceholder:'Search teams...'},'add');
+      dd.team.activate = createCheckboxDropdown('teamDropdownActivate',{placeholder:'Select teams',searchPlaceholder:'Search teams...'},'activate');
 
       dd.managementUnit.remove = createCheckboxDropdown('managementUnitDropdownRemove',{placeholder:'Select management units',searchPlaceholder:'Search management units...'},'remove');
       dd.managementUnit.add    = createCheckboxDropdown('managementUnitDropdownAdd',{placeholder:'Select management units',searchPlaceholder:'Search management units...'},'add');
+      dd.managementUnit.activate = createCheckboxDropdown('managementUnitDropdownActivate',{placeholder:'Select management units',searchPlaceholder:'Search management units...'},'activate');
     }
 
     function createBulkDropdowns(){
@@ -632,6 +750,7 @@
 
       dd.agent.remove.setOptions(validUsers);
       dd.agent.add.setOptions(validUsers);
+      dd.agent.activate.setOptions(validUsers);
 
       const queueOpts = availableQueues
         .map(q => ({value:q.id,label:q.name}))
@@ -639,6 +758,7 @@
 
       dd.queue.remove.setOptions(queueOpts);
       dd.queue.add.setOptions(queueOpts);
+      dd.queue.activate.setOptions(queueOpts);
 
       bulkDd.remove.setOptions(queueOpts);
       bulkDd.add.setOptions(queueOpts);
@@ -648,12 +768,20 @@
         .sort((a,b)=>a.label.localeCompare(b.label));
       dd.team.remove.setOptions(teamOpts);
       dd.team.add.setOptions(teamOpts);
+      dd.team.activate.setOptions(teamOpts);
 
       const muOpts = availableManagementUnits
         .map(mu => ({value:mu.id,label:mu.name}))
         .sort((a,b)=>a.label.localeCompare(b.label));
       dd.managementUnit.remove.setOptions(muOpts);
       dd.managementUnit.add.setOptions(muOpts);
+      dd.managementUnit.activate.setOptions(muOpts);
+    }
+
+    function populateActivateQueueDropdown(){
+      const select = document.getElementById('bulkQueueActivate');
+      select.innerHTML = '<option value="">Select a queue</option>' + 
+        availableQueues.map(q => `<option value="${q.id}">${q.name}</option>`).join('');
     }
 
     /********* BULK DISPLAY *********/
@@ -679,40 +807,47 @@
         sharedSelections.agentIds = values;
         if (mode !== 'remove') dd.agent.remove.setSelectedValues(values);
         if (mode !== 'add') dd.agent.add.setSelectedValues(values);
+        if (mode !== 'activate') dd.agent.activate.setSelectedValues(values);
       }
       if (dropId.includes("queueDropdown")){
         sharedSelections.queueIds = values;
         if (mode !== 'remove') dd.queue.remove.setSelectedValues(values);
         if (mode !== 'add') dd.queue.add.setSelectedValues(values);
+        if (mode !== 'activate') dd.queue.activate.setSelectedValues(values);
       }
       if (dropId.includes("teamDropdown")){
         sharedSelections.teamIds = values;
         if (mode !== 'remove') dd.team.remove.setSelectedValues(values);
         if (mode !== 'add') dd.team.add.setSelectedValues(values);
+        if (mode !== 'activate') dd.team.activate.setSelectedValues(values);
       }
       if (dropId.includes("managementUnitDropdown")){
         sharedSelections.managementUnitIds = values;
         if (mode !== 'remove') dd.managementUnit.remove.setSelectedValues(values);
         if (mode !== 'add') dd.managementUnit.add.setSelectedValues(values);
+        if (mode !== 'activate') dd.managementUnit.activate.setSelectedValues(values);
       }
     }
 
     function syncSelectionsToCurrentTab(mode){
-      dd.agent[mode].setSelectedValues(sharedSelections.agentIds);
-      dd.queue[mode].setSelectedValues(sharedSelections.queueIds);
-      dd.team[mode].setSelectedValues(sharedSelections.teamIds);
-      dd.managementUnit[mode].setSelectedValues(sharedSelections.managementUnitIds);
+      if (dd.agent[mode]) dd.agent[mode].setSelectedValues(sharedSelections.agentIds);
+      if (dd.queue[mode]) dd.queue[mode].setSelectedValues(sharedSelections.queueIds);
+      if (dd.team[mode]) dd.team[mode].setSelectedValues(sharedSelections.teamIds);
+      if (dd.managementUnit[mode]) dd.managementUnit[mode].setSelectedValues(sharedSelections.managementUnitIds);
 
       updateBulkQueueDisplay();
 
-      if (currentFetchedData.usersWithQueues.length)
+      if (mode === 'activate' && activationData.memberships.length) {
+        populateActivateTable(activationData.memberships);
+      } else if (currentFetchedData.usersWithQueues.length) {
         populateTableForTab(mode);
+      }
     }
 
     function populateTableForTab(mode){
       if (!currentFetchedData.usersWithQueues.length) return;
       if (mode === 'remove') populateRemoveTable(currentFetchedData.usersWithQueues);
-      else populateAddTable(currentFetchedData.usersWithQueues, currentFetchedData.queueIds);
+      else if (mode === 'add') populateAddTable(currentFetchedData.usersWithQueues, currentFetchedData.queueIds);
     }
 
     /********* BULK BUTTONS *********/
@@ -722,15 +857,26 @@
 
       document.getElementById('applyBulkAdd').addEventListener('click',applyBulkAdd);
       document.getElementById('refreshAdd').addEventListener('click',()=>refreshCurrentView('add'));
+
+      document.getElementById('applyBulkActivate').addEventListener('click',() => applyBulkActivate(true));
+      document.getElementById('applyBulkDeactivate').addEventListener('click',() => applyBulkActivate(false));
+      document.getElementById('refreshActivate').addEventListener('click',()=>refreshCurrentView('activate'));
     }
 
     async function refreshCurrentView(mode){
-      if (!currentFetchedData.usersWithQueues.length){
+      if (mode === 'activate') {
+        if (activationData.memberships.length) {
+          await fetchActivationData();
+          showMessage("View refreshed","success");
+        } else {
+          showMessage("No data to refresh");
+        }
+      } else if (currentFetchedData.usersWithQueues.length) {
+        await fetchUsers(mode);
+        showMessage("View refreshed","success");
+      } else {
         showMessage("No data to refresh");
-        return;
       }
-      await fetchUsers(mode);
-      showMessage("View refreshed","success");
     }
 
     /********* TAB SWITCHING *********/
@@ -753,6 +899,10 @@
       document.getElementById('fetchUsersAdd').addEventListener('click',()=>fetchUsers('add'));
       document.getElementById('addQueues').addEventListener('click',addSelectedQueues);
 
+      document.getElementById('fetchUsersActivate').addEventListener('click',fetchActivationData);
+      document.getElementById('activateSelected').addEventListener('click',() => activateSelected(true));
+      document.getElementById('deactivateSelected').addEventListener('click',() => activateSelected(false));
+
       document.getElementById('selectAllUsersRemove').addEventListener('change',function(){
         document.querySelectorAll('#userQueuesTableRemove tbody input[type="checkbox"]').forEach(cb=>cb.checked=this.checked);
         updateRemoveButtonState();
@@ -761,6 +911,11 @@
       document.getElementById('selectAllUsersAdd').addEventListener('change',function(){
         document.querySelectorAll('#userQueuesTableAdd tbody input[type="checkbox"]').forEach(cb=>cb.checked=this.checked);
         updateAddButtonState();
+      });
+
+      document.getElementById('selectAllUsersActivate').addEventListener('change',function(){
+        document.querySelectorAll('#userQueuesTableActivate tbody input[type="checkbox"]').forEach(cb=>cb.checked=this.checked);
+        updateActivateButtonState();
       });
     }
 
@@ -830,6 +985,113 @@
       currentFetchedData = { usersWithQueues:filtered, queueIds };
       populateRemoveTable(filtered);
       populateAddTable(filtered, queueIds);
+    }
+
+    /********* FETCH ACTIVATION DATA *********/
+    async function fetchActivationData(){
+      const agentIds = dd.agent.activate.getSelectedValues();
+      const queueIds = dd.queue.activate.getSelectedValues();
+      const teamIds = dd.team.activate.getSelectedValues();
+      const muIds = dd.managementUnit.activate.getSelectedValues();
+      const statusFilter = document.getElementById('statusFilterActivate').value;
+
+      if (!agentIds.length && !queueIds.length && !teamIds.length && !muIds.length){
+        showMessage("Please select at least one filter");
+        return;
+      }
+
+      const tbody = document.querySelector('#userQueuesTableActivate tbody');
+      tbody.innerHTML = `<tr><td colspan="5" class="loading">Loading membership status...</td></tr>`;
+
+      // Get users based on filters
+      const validUsers = availableUsers.filter(u=>u.name && u.name.trim() && u.name!=="Unknown User");
+      let users = [];
+
+      if (agentIds.length){
+        users = agentIds.map(id=>validUsers.find(u=>u.id===id)).filter(Boolean);
+      } else if (teamIds.length){
+        const allMembers = (await Promise.all(teamIds.map(id=>fetchTeamMembers(id)))).flat();
+        const proc = await Promise.all(allMembers.map(m=>processTeamMember(m)));
+        users = Array.from(new Map(proc.filter(Boolean).map(u=>[u.id,u])).values());
+      } else if (muIds.length){
+        const allMembers = (await Promise.all(muIds.map(id=>fetchManagementUnitUsers(id)))).flat();
+        const proc = await Promise.all(allMembers.map(m=>processManagementUnitUser(m)));
+        users = Array.from(new Map(proc.filter(Boolean).map(u=>[u.id,u])).values());
+      }
+
+      // Determine which queues to check
+      let targetQueues = [];
+      if (queueIds.length) {
+        targetQueues = queueIds;
+      } else {
+        // If no queues selected, get all queues from users
+        const userQueuesPromises = users.map(async user => {
+          const queues = await fetchUserQueues(user.id);
+          return queues.map(q => q.id);
+        });
+        const userQueuesArrays = await Promise.all(userQueuesPromises);
+        targetQueues = [...new Set(userQueuesArrays.flat())];
+      }
+
+      if (!targetQueues.length) {
+        tbody.innerHTML = `<tr><td colspan="5">No queues found</td></tr>`;
+        return;
+      }
+
+      // For each user-queue combination, get membership status
+      const memberships = [];
+      
+      for (const user of users) {
+        for (const queueId of targetQueues) {
+          try {
+            const status = await fetchQueueMembershipStatus(user.id, queueId);
+            memberships.push({
+              userId: user.id,
+              userName: user.name,
+              queueId: queueId,
+              queueName: availableQueues.find(q => q.id === queueId)?.name || queueId,
+              joined: status
+            });
+          } catch (e) {
+            console.error(`Error fetching status for user ${user.id} queue ${queueId}:`, e);
+          }
+        }
+      }
+
+      // Apply status filter
+      let filtered = memberships;
+      if (statusFilter === 'active') {
+        filtered = memberships.filter(m => m.joined === true);
+      } else if (statusFilter === 'inactive') {
+        filtered = memberships.filter(m => m.joined === false);
+      }
+
+      activationData.memberships = filtered;
+      populateActivateTable(filtered);
+    }
+
+    /********* FETCH QUEUE MEMBERSHIP STATUS *********/
+    async function fetchQueueMembershipStatus(userId, queueId) {
+      try {
+        const res = await fetch(
+          `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`,
+          { headers: authHeaders() }
+        );
+        
+        if (res.status === 404) {
+          return false; // User not in queue
+        }
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch membership: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        return data.joined === true; // The 'joined' field indicates if they're active
+      } catch (e) {
+        console.error(`Error in fetchQueueMembershipStatus:`, e);
+        return false;
+      }
     }
 
     /********* QUEUE MEMBERS *********/
@@ -942,7 +1204,6 @@
       });
       
       document.querySelectorAll('.queue-select-remove').forEach(sel=>{
-        // Auto-check when a queue is selected
         sel.addEventListener('change',function(){
           const userId = this.getAttribute('data-user-id');
           if (this.value) {
@@ -1010,7 +1271,6 @@
       });
       
       document.querySelectorAll('.queue-select-add').forEach(sel=>{
-        // Auto-check when a queue is selected
         sel.addEventListener('change',function(){
           const userId = this.getAttribute('data-user-id');
           if (this.value) {
@@ -1036,6 +1296,73 @@
       });
 
       btn.disabled = !ok;
+    }
+
+    function populateActivateTable(memberships){
+      const tbody = document.querySelector('#userQueuesTableActivate tbody');
+      tbody.innerHTML = '';
+
+      if (!memberships.length){
+        tbody.innerHTML = `<tr><td colspan="5">No memberships found</td></tr>`;
+        updateActivateButtonState();
+        return;
+      }
+
+      memberships.forEach(m => {
+        const row = document.createElement('tr');
+        const statusClass = m.joined ? 'status-active' : 'status-inactive';
+        const statusText = m.joined ? 'Active' : 'Inactive';
+        
+        row.innerHTML = `
+          <td><input type="checkbox" class="activate-checkbox" data-user-id="${m.userId}" data-queue-id="${m.queueId}" data-current-status="${m.joined}"></td>
+          <td>${m.userName}</td>
+          <td>${m.queueName}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>
+            <select class="action-select" data-user-id="${m.userId}" data-queue-id="${m.queueId}">
+              <option value="">Select Action</option>
+              <option value="activate" ${m.joined ? 'disabled' : ''}>Activate</option>
+              <option value="deactivate" ${!m.joined ? 'disabled' : ''}>Deactivate</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.querySelectorAll('.activate-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateActivateButtonState);
+      });
+
+      document.querySelectorAll('.action-select').forEach(sel => {
+        sel.addEventListener('change', function() {
+          const userId = this.getAttribute('data-user-id');
+          const checkbox = document.querySelector(`.activate-checkbox[data-user-id="${userId}"][data-queue-id="${this.getAttribute('data-queue-id')}"]`);
+          if (this.value && checkbox) {
+            checkbox.checked = true;
+          }
+          updateActivateButtonState();
+        });
+      });
+
+      updateActivateButtonState();
+    }
+
+    function updateActivateButtonState(){
+      const activateBtn = document.getElementById('activateSelected');
+      const deactivateBtn = document.getElementById('deactivateSelected');
+      const checkedBoxes = [...document.querySelectorAll('.activate-checkbox:checked')];
+      
+      let canActivate = false;
+      let canDeactivate = false;
+
+      checkedBoxes.forEach(cb => {
+        const status = cb.getAttribute('data-current-status') === 'true';
+        if (!status) canActivate = true;
+        if (status) canDeactivate = true;
+      });
+
+      activateBtn.disabled = !canActivate;
+      deactivateBtn.disabled = !canDeactivate;
     }
 
     /********* REMOVE QUEUE *********/
@@ -1145,6 +1472,107 @@
       if (!res.ok) throw new Error("Add failed");
     }
 
+    /********* ACTIVATE/DEACTIVATE *********/
+    async function activateSelected(activate){
+      const checked = [...document.querySelectorAll('.activate-checkbox:checked')];
+      const ops = [];
+
+      checked.forEach(cb => {
+        const userId = cb.getAttribute('data-user-id');
+        const queueId = cb.getAttribute('data-queue-id');
+        const currentStatus = cb.getAttribute('data-current-status') === 'true';
+        
+        // Only include if the action matches the desired state change
+        if ((activate && !currentStatus) || (!activate && currentStatus)) {
+          ops.push({ userId, queueId, activate });
+        }
+      });
+
+      if (!ops.length) {
+        showMessage(`No ${activate ? 'inactive' : 'active'} items selected to ${activate ? 'activate' : 'deactivate'}`);
+        return;
+      }
+
+      const btn = activate ? document.getElementById('activateSelected') : document.getElementById('deactivateSelected');
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+
+      const results = await Promise.allSettled(
+        ops.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
+      );
+
+      const fails = results.filter(r => r.status === 'rejected');
+      if (fails.length) {
+        showMessage(`${fails.length} failures occurred`);
+      } else {
+        showMessage(`Successfully ${activate ? 'activated' : 'deactivated'} ${ops.length} membership(s)`, 'success');
+      }
+
+      btn.disabled = false;
+      btn.textContent = activate ? 'Activate Selected' : 'Deactivate Selected';
+
+      // Refresh the view
+      await fetchActivationData();
+    }
+
+    async function applyBulkActivate(activate) {
+      const queueId = document.getElementById('bulkQueueActivate').value;
+      if (!queueId) {
+        showMessage('Please select a queue for bulk action');
+        return;
+      }
+
+      const checkedUsers = [...document.querySelectorAll('.activate-checkbox:checked')];
+      if (!checkedUsers.length) {
+        showMessage('Please select users to apply bulk action to');
+        return;
+      }
+
+      const userIds = [...new Set(checkedUsers.map(cb => cb.getAttribute('data-user-id')))];
+      const ops = userIds.map(userId => ({ userId, queueId, activate }));
+
+      const btn = activate ? document.getElementById('applyBulkActivate') : document.getElementById('applyBulkDeactivate');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+
+      const results = await Promise.allSettled(
+        ops.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
+      );
+
+      const fails = results.filter(r => r.status === 'rejected');
+      if (fails.length) {
+        showMessage(`${fails.length} failures occurred in bulk operation`);
+      } else {
+        showMessage(`Successfully ${activate ? 'activated' : 'deactivated'} ${ops.length} users in queue`, 'success');
+      }
+
+      btn.disabled = false;
+      btn.textContent = originalText;
+
+      await fetchActivationData();
+    }
+
+    async function updateQueueMembership(userId, queueId, activate) {
+      // Using PATCH endpoint: /api/v2/routing/queues/{queueId}/members/{memberId}
+      const url = `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`;
+      
+      const body = {
+        joined: activate
+      };
+
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to ${activate ? 'activate' : 'deactivate'} membership: ${res.status}`);
+      }
+
+      return await res.json();
+    }
   </script>
 </body>
 </html>
