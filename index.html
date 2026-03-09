@@ -9,6 +9,7 @@
       --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
       --pill:#e9f6f0; --warning-bg:#fff3cd; --warning-border:#ffeeba; --warning-text:#856404;
       --success-bg:#d4edda; --success-border:#c3e6cb; --success-text:#155724;
+      --email-color:#007bff; --call-color:#28a745; --chat-color:#fd7e14; --message-color:#6f42c1;
     }
 
     body{
@@ -221,6 +222,37 @@
       display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;
     }
 
+    /* === MEDIA TYPE BUTTONS === */
+    .media-type-section{
+      background:#f8f9fa;padding:20px;border-radius:8px;
+      border:1px solid #dee2e6;margin-bottom:24px;
+    }
+    .media-type-buttons{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;
+    }
+    .media-btn{
+      padding:12px 20px;border:none;border-radius:8px;
+      color:white;font-weight:600;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;
+      min-width:120px;transition:opacity .2s;
+    }
+    .media-btn:hover{opacity:.9}
+    .media-btn.email{background:var(--email-color)}
+    .media-btn.call{background:var(--call-color)}
+    .media-btn.chat{background:var(--chat-color)}
+    .media-btn.message{background:var(--message-color)}
+    .media-btn small{font-size:11px;opacity:.9;margin-top:4px}
+    .media-btn:disabled{opacity:.5;cursor:not-allowed}
+
+    .queue-media-tag{
+      display:inline-block;padding:2px 6px;border-radius:4px;
+      font-size:10px;font-weight:600;margin-left:6px;color:white;
+    }
+    .media-email{background:var(--email-color)}
+    .media-call{background:var(--call-color)}
+    .media-chat{background:var(--chat-color)}
+    .media-message{background:var(--message-color)}
+
     @media (max-width:1200px){
       .controls{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
       .bulk-section{grid-template-columns:1fr auto}
@@ -229,6 +261,7 @@
       .controls{grid-template-columns:1fr}
       .bulk-section{grid-template-columns:1fr;gap:15px}
       .bulk-action{min-width:100%}
+      .media-type-buttons{flex-direction:column}
     }
   </style>
 </head>
@@ -413,18 +446,58 @@
           </div>
           <div>
             <label>&nbsp;</label>
-            <button id="fetchUsersActivate" class="full-width-btn">Get Users</button>
+            <button id="fetchUsersActivate" class="full-width-btn">Get Users & Status</button>
           </div>
         </div>
 
         <div class="muted">Shows users with queue assignments and their activation status</div>
       </div>
 
+      <!-- Media Type Quick Actions -->
+      <div class="media-type-section">
+        <h3 style="margin-top:0;">Quick Actions by Media Type</h3>
+        <p class="muted">Apply activation/deactivation to all queues of a specific media type for selected users</p>
+        <div class="media-type-buttons">
+          <button class="media-btn email" id="activateAllEmail">
+            Activate All Email
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn email" id="deactivateAllEmail" style="background:#dc3545;">
+            Deactivate All Email
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn call" id="activateAllCall">
+            Activate All Call
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn call" id="deactivateAllCall" style="background:#dc3545;">
+            Deactivate All Call
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn chat" id="activateAllChat">
+            Activate All Chat
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn chat" id="deactivateAllChat" style="background:#dc3545;">
+            Deactivate All Chat
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn message" id="activateAllMessage">
+            Activate All Message
+            <small>0 selected</small>
+          </button>
+          <button class="media-btn message" id="deactivateAllMessage" style="background:#dc3545;">
+            Deactivate All Message
+            <small>0 selected</small>
+          </button>
+        </div>
+      </div>
+
       <div class="card">
 
         <div class="bulk-section">
           <div class="bulk-queue-selector">
-            <label>Bulk Action Queue</label>
+            <label>Bulk Action - Single Queue</label>
             <select id="bulkQueueActivate" style="width:100%;">
               <option value="">Select a queue</option>
             </select>
@@ -434,8 +507,8 @@
           </div>
 
           <div class="bulk-action" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button id="applyBulkActivate" class="full-width-btn small-btn" style="background: #4A8C7D;">Activate All</button>
-            <button id="applyBulkDeactivate" class="full-width-btn small-btn" style="background: #d9534f;">Deactivate All</button>
+            <button id="applyBulkActivate" class="full-width-btn small-btn" style="background: #4A8C7D;">Activate All Selected</button>
+            <button id="applyBulkDeactivate" class="full-width-btn small-btn" style="background: #d9534f;">Deactivate All Selected</button>
             <button id="refreshActivate" class="full-width-btn small-btn refresh-btn" style="grid-column:span 2;">Refresh View</button>
           </div>
         </div>
@@ -448,7 +521,7 @@
             <tr>
               <th><input type="checkbox" id="selectAllUsersActivate" class="select-all-checkbox"></th>
               <th>Agent</th>
-              <th>Queue</th>
+              <th>Queue <span class="queue-media-tag" style="margin-left:10px;">Media Type</span></th>
               <th>Current Status</th>
               <th>Action</th>
             </tr>
@@ -478,6 +551,9 @@
     let availableTeams = [];
     let availableManagementUnits = [];
 
+    // Media type mapping for queues
+    const mediaTypeMap = new Map(); // queueId -> mediaType
+
     const sharedSelections = {
       agentIds: [], queueIds: [], teamIds: [], managementUnitIds: []
     };
@@ -489,7 +565,7 @@
 
     // Activation data - stores membership status for each user-queue pair
     let activationData = {
-      memberships: [] // Array of {userId, queueId, joined}
+      memberships: [] // Array of {userId, queueId, joined, userName, queueName, mediaType}
     };
 
     const dd = {
@@ -534,8 +610,10 @@
     async function initializeApp(){
       try {
         await Promise.all([
-          fetchAllUsers(), fetchAllQueues(),
-          fetchAllTeams(), fetchAllManagementUnits()
+          fetchAllUsers(), 
+          fetchAllQueuesWithMediaTypes(),
+          fetchAllTeams(), 
+          fetchAllManagementUnits()
         ]);
 
         createAllDropdowns();
@@ -544,6 +622,7 @@
         populateActivateQueueDropdown();
         setupEventListeners();
         setupBulkControls();
+        setupMediaTypeControls();
 
       } catch (e){
         showMessage("Error initialising. Redirecting...");
@@ -566,7 +645,7 @@
       availableUsers = all;
     }
 
-    async function fetchAllQueues(){
+    async function fetchAllQueuesWithMediaTypes(){
       let all=[], page=1, size=100, total=0;
       do{
         const res = await fetch(
@@ -574,7 +653,23 @@
           {headers:authHeaders()}
         );
         const data = await res.json();
-        all = all.concat(data.entities||[]);
+        const queues = data.entities||[];
+        
+        // Store media types
+        queues.forEach(q => {
+          if (q.mediaSettings) {
+            // Determine media type from mediaSettings
+            if (q.mediaSettings.email) mediaTypeMap.set(q.id, 'email');
+            else if (q.mediaSettings.call) mediaTypeMap.set(q.id, 'call');
+            else if (q.mediaSettings.chat) mediaTypeMap.set(q.id, 'chat');
+            else if (q.mediaSettings.message) mediaTypeMap.set(q.id, 'message');
+            else mediaTypeMap.set(q.id, 'unknown');
+          } else {
+            mediaTypeMap.set(q.id, 'unknown');
+          }
+        });
+        
+        all = all.concat(queues);
         total = data.total||0; page++;
       } while(all.length < total);
       availableQueues = all;
@@ -653,10 +748,21 @@
           const id = `${containerId}_${o.value}`;
           const row = document.createElement('div');
           row.className='cd-item';
+          
+          // Add media type tag for queue dropdowns
+          let mediaTag = '';
+          if (containerId.includes('queue') && o.value) {
+            const mediaType = mediaTypeMap.get(o.value);
+            if (mediaType && mediaType !== 'unknown') {
+              mediaTag = `<span class="queue-media-tag media-${mediaType}">${mediaType}</span>`;
+            }
+          }
+          
           row.innerHTML = `
-            <label for="${id}">
+            <label for="${id}" style="display:flex; align-items:center; gap:10px; width:100%;">
               <input type="checkbox" id="${id}" value="${o.value}" ${selected.has(o.value)?'checked':''}/>
-              <span>${o.label}</span>
+              <span style="flex:1;">${o.label}</span>
+              ${mediaTag}
             </label>
           `;
           const cb = row.querySelector('input');
@@ -781,7 +887,11 @@
     function populateActivateQueueDropdown(){
       const select = document.getElementById('bulkQueueActivate');
       select.innerHTML = '<option value="">Select a queue</option>' + 
-        availableQueues.map(q => `<option value="${q.id}">${q.name}</option>`).join('');
+        availableQueues.map(q => {
+          const mediaType = mediaTypeMap.get(q.id);
+          const mediaTag = mediaType && mediaType !== 'unknown' ? ` (${mediaType})` : '';
+          return `<option value="${q.id}">${q.name}${mediaTag}</option>`;
+        }).join('');
     }
 
     /********* BULK DISPLAY *********/
@@ -797,7 +907,9 @@
       }
       el.innerHTML = queueIds.map(id=>{
         const q = availableQueues.find(q=>q.id===id);
-        return `<div class="selected-queue-item">${q ? q.name : id}</div>`;
+        const mediaType = mediaTypeMap.get(id);
+        const mediaTag = mediaType && mediaType !== 'unknown' ? `<span class="queue-media-tag media-${mediaType}" style="margin-left:4px;">${mediaType}</span>` : '';
+        return `<div class="selected-queue-item">${q ? q.name : id}${mediaTag}</div>`;
       }).join('');
     }
 
@@ -839,6 +951,7 @@
 
       if (mode === 'activate' && activationData.memberships.length) {
         populateActivateTable(activationData.memberships);
+        updateMediaTypeCounts();
       } else if (currentFetchedData.usersWithQueues.length) {
         populateTableForTab(mode);
       }
@@ -861,6 +974,24 @@
       document.getElementById('applyBulkActivate').addEventListener('click',() => applyBulkActivate(true));
       document.getElementById('applyBulkDeactivate').addEventListener('click',() => applyBulkActivate(false));
       document.getElementById('refreshActivate').addEventListener('click',()=>refreshCurrentView('activate'));
+    }
+
+    function setupMediaTypeControls() {
+      // Email
+      document.getElementById('activateAllEmail').addEventListener('click', () => handleMediaTypeAction('email', true));
+      document.getElementById('deactivateAllEmail').addEventListener('click', () => handleMediaTypeAction('email', false));
+      
+      // Call
+      document.getElementById('activateAllCall').addEventListener('click', () => handleMediaTypeAction('call', true));
+      document.getElementById('deactivateAllCall').addEventListener('click', () => handleMediaTypeAction('call', false));
+      
+      // Chat
+      document.getElementById('activateAllChat').addEventListener('click', () => handleMediaTypeAction('chat', true));
+      document.getElementById('deactivateAllChat').addEventListener('click', () => handleMediaTypeAction('chat', false));
+      
+      // Message
+      document.getElementById('activateAllMessage').addEventListener('click', () => handleMediaTypeAction('message', true));
+      document.getElementById('deactivateAllMessage').addEventListener('click', () => handleMediaTypeAction('message', false));
     }
 
     async function refreshCurrentView(mode){
@@ -916,6 +1047,7 @@
       document.getElementById('selectAllUsersActivate').addEventListener('change',function(){
         document.querySelectorAll('#userQueuesTableActivate tbody input[type="checkbox"]').forEach(cb=>cb.checked=this.checked);
         updateActivateButtonState();
+        updateMediaTypeCounts();
       });
     }
 
@@ -987,7 +1119,7 @@
       populateAddTable(filtered, queueIds);
     }
 
-    /********* FETCH ACTIVATION DATA *********/
+    /********* FETCH ACTIVATION DATA - USING QUEUE MEMBERS API *********/
     async function fetchActivationData(){
       const agentIds = dd.agent.activate.getSelectedValues();
       const queueIds = dd.queue.activate.getSelectedValues();
@@ -1001,36 +1133,15 @@
       }
 
       const tbody = document.querySelector('#userQueuesTableActivate tbody');
-      tbody.innerHTML = `<tr><td colspan="5" class="loading">Loading membership status...</td></tr>`;
-
-      // Get users based on filters
-      const validUsers = availableUsers.filter(u=>u.name && u.name.trim() && u.name!=="Unknown User");
-      let users = [];
-
-      if (agentIds.length){
-        users = agentIds.map(id=>validUsers.find(u=>u.id===id)).filter(Boolean);
-      } else if (teamIds.length){
-        const allMembers = (await Promise.all(teamIds.map(id=>fetchTeamMembers(id)))).flat();
-        const proc = await Promise.all(allMembers.map(m=>processTeamMember(m)));
-        users = Array.from(new Map(proc.filter(Boolean).map(u=>[u.id,u])).values());
-      } else if (muIds.length){
-        const allMembers = (await Promise.all(muIds.map(id=>fetchManagementUnitUsers(id)))).flat();
-        const proc = await Promise.all(allMembers.map(m=>processManagementUnitUser(m)));
-        users = Array.from(new Map(proc.filter(Boolean).map(u=>[u.id,u])).values());
-      }
+      tbody.innerHTML = `<tr><td colspan="5" class="loading">Loading membership status from queues...</td></tr>`;
 
       // Determine which queues to check
       let targetQueues = [];
       if (queueIds.length) {
         targetQueues = queueIds;
       } else {
-        // If no queues selected, get all queues from users
-        const userQueuesPromises = users.map(async user => {
-          const queues = await fetchUserQueues(user.id);
-          return queues.map(q => q.id);
-        });
-        const userQueuesArrays = await Promise.all(userQueuesPromises);
-        targetQueues = [...new Set(userQueuesArrays.flat())];
+        // If no queues selected, get all queues
+        targetQueues = availableQueues.map(q => q.id);
       }
 
       if (!targetQueues.length) {
@@ -1038,23 +1149,38 @@
         return;
       }
 
-      // For each user-queue combination, get membership status
+      // For each queue, get its members with status
       const memberships = [];
       
-      for (const user of users) {
-        for (const queueId of targetQueues) {
-          try {
-            const status = await fetchQueueMembershipStatus(user.id, queueId);
+      for (const queueId of targetQueues) {
+        try {
+          // Use the queue members API to get all members with their status
+          const members = await fetchQueueMembersWithStatus(queueId);
+          const queueName = availableQueues.find(q => q.id === queueId)?.name || queueId;
+          const mediaType = mediaTypeMap.get(queueId) || 'unknown';
+          
+          // Filter members based on selected agents
+          members.forEach(member => {
+            const userId = member.user?.id || member.id;
+            if (!userId) return;
+            
+            // Check if user is in selected agents list (if agents are selected)
+            if (agentIds.length && !agentIds.includes(userId)) return;
+            
+            const user = availableUsers.find(u => u.id === userId);
+            if (!user || !user.name) return;
+            
             memberships.push({
-              userId: user.id,
+              userId: userId,
               userName: user.name,
               queueId: queueId,
-              queueName: availableQueues.find(q => q.id === queueId)?.name || queueId,
-              joined: status
+              queueName: queueName,
+              mediaType: mediaType,
+              joined: member.joined === true
             });
-          } catch (e) {
-            console.error(`Error fetching status for user ${user.id} queue ${queueId}:`, e);
-          }
+          });
+        } catch (e) {
+          console.error(`Error fetching members for queue ${queueId}:`, e);
         }
       }
 
@@ -1068,29 +1194,31 @@
 
       activationData.memberships = filtered;
       populateActivateTable(filtered);
+      updateMediaTypeCounts();
     }
 
-    /********* FETCH QUEUE MEMBERSHIP STATUS *********/
-    async function fetchQueueMembershipStatus(userId, queueId) {
+    /********* FETCH QUEUE MEMBERS WITH STATUS - NEW FUNCTION *********/
+    async function fetchQueueMembersWithStatus(queueId) {
+      let all = [];
+      let page = 1;
+      const pageSize = 100;
+      
       try {
         const res = await fetch(
-          `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members/${userId}`,
+          `https://api.mypurecloud.ie/api/v2/routing/queues/${queueId}/members?pageSize=${pageSize}`,
           { headers: authHeaders() }
         );
         
-        if (res.status === 404) {
-          return false; // User not in queue
-        }
-        
         if (!res.ok) {
-          throw new Error(`Failed to fetch membership: ${res.status}`);
+          if (res.status === 404) return [];
+          throw new Error(`Failed to fetch queue members: ${res.status}`);
         }
         
         const data = await res.json();
-        return data.joined === true; // The 'joined' field indicates if they're active
+        return data.entities || [];
       } catch (e) {
-        console.error(`Error in fetchQueueMembershipStatus:`, e);
-        return false;
+        console.error(`Error in fetchQueueMembersWithStatus:`, e);
+        return [];
       }
     }
 
@@ -1313,10 +1441,17 @@
         const statusClass = m.joined ? 'status-active' : 'status-inactive';
         const statusText = m.joined ? 'Active' : 'Inactive';
         
+        // Get media type for display
+        const mediaType = m.mediaType || 'unknown';
+        const mediaClass = `media-${mediaType}`;
+        
         row.innerHTML = `
-          <td><input type="checkbox" class="activate-checkbox" data-user-id="${m.userId}" data-queue-id="${m.queueId}" data-current-status="${m.joined}"></td>
+          <td><input type="checkbox" class="activate-checkbox" data-user-id="${m.userId}" data-queue-id="${m.queueId}" data-current-status="${m.joined}" data-media-type="${mediaType}"></td>
           <td>${m.userName}</td>
-          <td>${m.queueName}</td>
+          <td>
+            ${m.queueName}
+            ${mediaType !== 'unknown' ? `<span class="queue-media-tag ${mediaClass}">${mediaType}</span>` : ''}
+          </td>
           <td><span class="status-badge ${statusClass}">${statusText}</span></td>
           <td>
             <select class="action-select" data-user-id="${m.userId}" data-queue-id="${m.queueId}">
@@ -1330,21 +1465,27 @@
       });
 
       document.querySelectorAll('.activate-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateActivateButtonState);
+        cb.addEventListener('change', function() {
+          updateActivateButtonState();
+          updateMediaTypeCounts();
+        });
       });
 
       document.querySelectorAll('.action-select').forEach(sel => {
         sel.addEventListener('change', function() {
           const userId = this.getAttribute('data-user-id');
-          const checkbox = document.querySelector(`.activate-checkbox[data-user-id="${userId}"][data-queue-id="${this.getAttribute('data-queue-id')}"]`);
+          const queueId = this.getAttribute('data-queue-id');
+          const checkbox = document.querySelector(`.activate-checkbox[data-user-id="${userId}"][data-queue-id="${queueId}"]`);
           if (this.value && checkbox) {
             checkbox.checked = true;
           }
           updateActivateButtonState();
+          updateMediaTypeCounts();
         });
       });
 
       updateActivateButtonState();
+      updateMediaTypeCounts();
     }
 
     function updateActivateButtonState(){
@@ -1363,6 +1504,45 @@
 
       activateBtn.disabled = !canActivate;
       deactivateBtn.disabled = !canDeactivate;
+    }
+
+    function updateMediaTypeCounts() {
+      const checkedBoxes = [...document.querySelectorAll('.activate-checkbox:checked')];
+      
+      // Count by media type
+      const counts = {
+        email: { total: 0, active: 0, inactive: 0 },
+        call: { total: 0, active: 0, inactive: 0 },
+        chat: { total: 0, active: 0, inactive: 0 },
+        message: { total: 0, active: 0, inactive: 0 }
+      };
+      
+      checkedBoxes.forEach(cb => {
+        const mediaType = cb.getAttribute('data-media-type');
+        const isActive = cb.getAttribute('data-current-status') === 'true';
+        
+        if (counts[mediaType]) {
+          counts[mediaType].total++;
+          if (isActive) {
+            counts[mediaType].active++;
+          } else {
+            counts[mediaType].inactive++;
+          }
+        }
+      });
+      
+      // Update button labels
+      document.querySelector('#activateAllEmail small').textContent = `${counts.email.inactive} to activate`;
+      document.querySelector('#deactivateAllEmail small').textContent = `${counts.email.active} to deactivate`;
+      
+      document.querySelector('#activateAllCall small').textContent = `${counts.call.inactive} to activate`;
+      document.querySelector('#deactivateAllCall small').textContent = `${counts.call.active} to deactivate`;
+      
+      document.querySelector('#activateAllChat small').textContent = `${counts.chat.inactive} to activate`;
+      document.querySelector('#deactivateAllChat small').textContent = `${counts.chat.active} to deactivate`;
+      
+      document.querySelector('#activateAllMessage small').textContent = `${counts.message.inactive} to activate`;
+      document.querySelector('#deactivateAllMessage small').textContent = `${counts.message.active} to deactivate`;
     }
 
     /********* REMOVE QUEUE *********/
@@ -1497,13 +1677,21 @@
       btn.disabled = true;
       btn.textContent = "Processing...";
 
-      const results = await Promise.allSettled(
-        ops.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
-      );
+      // Process in batches of 50 to avoid overwhelming the API
+      const batchSize = 50;
+      const results = [];
+      
+      for (let i = 0; i < ops.length; i += batchSize) {
+        const batch = ops.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(
+          batch.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
+        );
+        results.push(...batchResults);
+      }
 
       const fails = results.filter(r => r.status === 'rejected');
       if (fails.length) {
-        showMessage(`${fails.length} failures occurred`);
+        showMessage(`${fails.length} failures occurred out of ${ops.length} operations`);
       } else {
         showMessage(`Successfully ${activate ? 'activated' : 'deactivated'} ${ops.length} membership(s)`, 'success');
       }
@@ -1528,7 +1716,18 @@
         return;
       }
 
-      const userIds = [...new Set(checkedUsers.map(cb => cb.getAttribute('data-user-id')))];
+      // Get unique user IDs from checked boxes that are relevant for this queue
+      const userIds = [...new Set(
+        checkedUsers
+          .filter(cb => cb.getAttribute('data-queue-id') === queueId)
+          .map(cb => cb.getAttribute('data-user-id'))
+      )];
+
+      if (!userIds.length) {
+        showMessage(`No selected users are members of this queue`);
+        return;
+      }
+
       const ops = userIds.map(userId => ({ userId, queueId, activate }));
 
       const btn = activate ? document.getElementById('applyBulkActivate') : document.getElementById('applyBulkDeactivate');
@@ -1536,19 +1735,78 @@
       btn.disabled = true;
       btn.textContent = "Processing...";
 
-      const results = await Promise.allSettled(
-        ops.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
-      );
+      // Process in batches
+      const batchSize = 50;
+      const results = [];
+      
+      for (let i = 0; i < ops.length; i += batchSize) {
+        const batch = ops.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(
+          batch.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
+        );
+        results.push(...batchResults);
+      }
 
       const fails = results.filter(r => r.status === 'rejected');
       if (fails.length) {
-        showMessage(`${fails.length} failures occurred in bulk operation`);
+        showMessage(`${fails.length} failures occurred in bulk operation out of ${ops.length}`);
       } else {
         showMessage(`Successfully ${activate ? 'activated' : 'deactivated'} ${ops.length} users in queue`, 'success');
       }
 
       btn.disabled = false;
       btn.textContent = originalText;
+
+      await fetchActivationData();
+    }
+
+    async function handleMediaTypeAction(mediaType, activate) {
+      const checkedBoxes = [...document.querySelectorAll('.activate-checkbox:checked')];
+      
+      if (!checkedBoxes.length) {
+        showMessage('Please select users first');
+        return;
+      }
+
+      // Filter by media type and current status
+      const ops = checkedBoxes
+        .filter(cb => {
+          const cbMediaType = cb.getAttribute('data-media-type');
+          const isActive = cb.getAttribute('data-current-status') === 'true';
+          return cbMediaType === mediaType && ((activate && !isActive) || (!activate && isActive));
+        })
+        .map(cb => ({
+          userId: cb.getAttribute('data-user-id'),
+          queueId: cb.getAttribute('data-queue-id'),
+          activate
+        }));
+
+      if (!ops.length) {
+        showMessage(`No ${mediaType} ${activate ? 'inactive' : 'active'} items selected`);
+        return;
+      }
+
+      const action = activate ? 'Activating' : 'Deactivating';
+      showMessage(`${action} ${ops.length} ${mediaType} queue memberships...`, 'success');
+
+      // Process in batches
+      const batchSize = 50;
+      const results = [];
+      
+      for (let i = 0; i < ops.length; i += batchSize) {
+        const batch = ops.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(
+          batch.map(op => updateQueueMembership(op.userId, op.queueId, op.activate))
+        );
+        results.push(...batchResults);
+      }
+
+      const fails = results.filter(r => r.status === 'rejected');
+      if (fails.length) {
+        showMessage(`${fails.length} failures occurred out of ${ops.length} ${mediaType} operations`);
+      } else {
+        showMessage(`Successfully ${activate ? 'activated' : 'deactivated'} ${ops.length} ${mediaType} queue memberships`, 'success');
+      }
 
       await fetchActivationData();
     }
