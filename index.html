@@ -9,7 +9,7 @@
       --light-bg:#F8F9FA; --card-bg:#FFFFFF; --text-color:#2C3E50; --text-light:#6C757D;
       --pill:#e9f6f0; --warning-bg:#fff3cd; --warning-border:#ffeeba; --warning-text:#856404;
       --success-bg:#d4edda; --success-border:#c3e6cb; --success-text:#155724;
-      --email-color:#007bff; --call-color:#28a745; --chat-color:#fd7e14; --message-color:#6f42c1;
+      --activate-color:#4A8C7D; --deactivate-color:#d9534f;
     }
 
     body{
@@ -62,7 +62,7 @@
       margin-top:0;color:var(--primary-color);
     }
 
-    /* === UPDATED TABS (MATCHING YOUR OTHER TOOL) === */
+    /* === TABS === */
     .tab-container{
       display:flex;
       margin-bottom:20px;
@@ -210,48 +210,52 @@
     .status-inactive{
       background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;
     }
-    .queue-membership-status{
-      font-size:12px;margin-left:8px;color:var(--text-light);
-      font-weight:normal;
-    }
-    .queue-item{
-      display:inline-flex;align-items:center;margin:2px;padding:4px 8px;
-      background:var(--pill);border-radius:4px;border:1px solid var(--border-color);
-    }
-    .queue-list{
-      display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;
+
+    /* === MEDIA TYPE TAGS - Subtle, matching your color scheme === */
+    .queue-media-tag{
+      display:inline-block;padding:2px 8px;border-radius:12px;
+      font-size:11px;font-weight:500;margin-left:8px;
+      background:var(--pill);color:var(--text-color);
+      border:1px solid var(--border-color);
     }
 
-    /* === MEDIA TYPE BUTTONS === */
+    /* === MEDIA TYPE BUTTONS - Matching your color scheme === */
     .media-type-section{
       background:#f8f9fa;padding:20px;border-radius:8px;
       border:1px solid #dee2e6;margin-bottom:24px;
     }
     .media-type-buttons{
-      display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:15px;
+    }
+    .media-btn-group{
+      display:flex;flex-direction:column;gap:4px;min-width:140px;
+    }
+    .media-btn-group label{
+      font-size:12px;margin-bottom:2px;color:var(--text-color);
+    }
+    .media-btn-row{
+      display:flex;gap:4px;
     }
     .media-btn{
-      padding:12px 20px;border:none;border-radius:8px;
+      padding:8px 12px;border:none;border-radius:6px;
       color:white;font-weight:600;cursor:pointer;
-      display:flex;flex-direction:column;align-items:center;
-      min-width:120px;transition:opacity .2s;
+      font-size:13px;flex:1;transition:opacity .2s;
+      display:flex;align-items:center;justify-content:center;gap:4px;
     }
     .media-btn:hover{opacity:.9}
-    .media-btn.email{background:var(--email-color)}
-    .media-btn.call{background:var(--call-color)}
-    .media-btn.chat{background:var(--chat-color)}
-    .media-btn.message{background:var(--message-color)}
-    .media-btn small{font-size:11px;opacity:.9;margin-top:4px}
-    .media-btn:disabled{opacity:.5;cursor:not-allowed}
-
-    .queue-media-tag{
-      display:inline-block;padding:2px 6px;border-radius:4px;
-      font-size:10px;font-weight:600;margin-left:6px;color:white;
+    .media-btn.activate{
+      background:var(--activate-color);
     }
-    .media-email{background:var(--email-color)}
-    .media-call{background:var(--call-color)}
-    .media-chat{background:var(--chat-color)}
-    .media-message{background:var(--message-color)}
+    .media-btn.deactivate{
+      background:var(--deactivate-color);
+    }
+    .media-btn:disabled{
+      opacity:.5;cursor:not-allowed;
+    }
+    .media-btn small{
+      font-size:11px;font-weight:normal;margin-left:4px;
+      background:rgba(255,255,255,.2);padding:2px 6px;border-radius:10px;
+    }
 
     @media (max-width:1200px){
       .controls{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
@@ -262,6 +266,7 @@
       .bulk-section{grid-template-columns:1fr;gap:15px}
       .bulk-action{min-width:100%}
       .media-type-buttons{flex-direction:column}
+      .media-btn-group{min-width:100%}
     }
   </style>
 </head>
@@ -453,43 +458,89 @@
         <div class="muted">Shows users with queue assignments and their activation status</div>
       </div>
 
-      <!-- Media Type Quick Actions -->
+      <!-- Media Type Quick Actions - Redesigned to match color scheme -->
       <div class="media-type-section">
-        <h3 style="margin-top:0;">Quick Actions by Media Type</h3>
-        <p class="muted">Apply activation/deactivation to all selected queues of a specific media type</p>
+        <h3 style="margin-top:0; color:var(--primary-color);">Quick Actions by Media Type</h3>
+        <p class="muted">Select users above, then use these buttons to activate/deactivate all queues of a specific media type for the selected users</p>
+        
         <div class="media-type-buttons">
-          <button class="media-btn email" id="activateAllEmail">
-            Activate All Email
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn email" id="deactivateAllEmail" style="background:#dc3545;">
-            Deactivate All Email
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn call" id="activateAllCall">
-            Activate All Call
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn call" id="deactivateAllCall" style="background:#dc3545;">
-            Deactivate All Call
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn chat" id="activateAllChat">
-            Activate All Chat
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn chat" id="deactivateAllChat" style="background:#dc3545;">
-            Deactivate All Chat
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn message" id="activateAllMessage">
-            Activate All Message
-            <small>0 selected</small>
-          </button>
-          <button class="media-btn message" id="deactivateAllMessage" style="background:#dc3545;">
-            Deactivate All Message
-            <small>0 selected</small>
-          </button>
+          <!-- Voice/Call -->
+          <div class="media-btn-group">
+            <label>📞 Voice</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllCall">
+                Activate <small id="callActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllCall">
+                Deactivate <small id="callDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="media-btn-group">
+            <label>✉️ Email</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllEmail">
+                Activate <small id="emailActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllEmail">
+                Deactivate <small id="emailDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat -->
+          <div class="media-btn-group">
+            <label>💬 Chat</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllChat">
+                Activate <small id="chatActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllChat">
+                Deactivate <small id="chatDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Message -->
+          <div class="media-btn-group">
+            <label>📱 Message</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllMessage">
+                Activate <small id="messageActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllMessage">
+                Deactivate <small id="messageDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Callback -->
+          <div class="media-btn-group">
+            <label>🔄 Callback</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllCallback">
+                Activate <small id="callbackActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllCallback">
+                Deactivate <small id="callbackDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Video -->
+          <div class="media-btn-group">
+            <label>📹 Video</label>
+            <div class="media-btn-row">
+              <button class="media-btn activate" id="activateAllVideo">
+                Activate <small id="videoActivateCount">0</small>
+              </button>
+              <button class="media-btn deactivate" id="deactivateAllVideo">
+                Deactivate <small id="videoDeactivateCount">0</small>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -507,8 +558,8 @@
           </div>
 
           <div class="bulk-action" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button id="applyBulkActivate" class="full-width-btn small-btn" style="background: #4A8C7D;">Activate All Selected</button>
-            <button id="applyBulkDeactivate" class="full-width-btn small-btn" style="background: #d9534f;">Deactivate All Selected</button>
+            <button id="applyBulkActivate" class="full-width-btn small-btn" style="background: var(--activate-color);">Activate All Selected</button>
+            <button id="applyBulkDeactivate" class="full-width-btn small-btn" style="background: var(--deactivate-color);">Deactivate All Selected</button>
             <button id="refreshActivate" class="full-width-btn small-btn refresh-btn" style="grid-column:span 2;">Refresh View</button>
           </div>
         </div>
@@ -521,7 +572,7 @@
             <tr>
               <th><input type="checkbox" id="selectAllUsersActivate" class="select-all-checkbox"></th>
               <th>Agent</th>
-              <th>Queue <span class="queue-media-tag" style="margin-left:10px;">Media Type</span></th>
+              <th>Queue</th>
               <th>Current Status</th>
               <th>Action</th>
             </tr>
@@ -530,8 +581,8 @@
         </table>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;">
-          <button id="activateSelected" class="full-width-btn" style="background: #4A8C7D;" disabled>Activate Selected</button>
-          <button id="deactivateSelected" class="full-width-btn" style="background: #d9534f;" disabled>Deactivate Selected</button>
+          <button id="activateSelected" class="full-width-btn" style="background: var(--activate-color);" disabled>Activate Selected</button>
+          <button id="deactivateSelected" class="full-width-btn" style="background: var(--deactivate-color);" disabled>Deactivate Selected</button>
         </div>
       </div>
     </div>
@@ -551,7 +602,7 @@
     let availableTeams = [];
     let availableManagementUnits = [];
 
-    // Media type mapping for queues
+    // Media type mapping for queues - expanded to cover all types
     const mediaTypeMap = new Map(); // queueId -> mediaType
 
     const sharedSelections = {
@@ -655,18 +706,32 @@
         const data = await res.json();
         const queues = data.entities||[];
         
-        // Store media types
+        // Store media types - expanded to cover all possibilities
         queues.forEach(q => {
+          let mediaType = 'unknown';
+          
           if (q.mediaSettings) {
-            // Determine media type from mediaSettings
-            if (q.mediaSettings.email) mediaTypeMap.set(q.id, 'email');
-            else if (q.mediaSettings.call) mediaTypeMap.set(q.id, 'call');
-            else if (q.mediaSettings.chat) mediaTypeMap.set(q.id, 'chat');
-            else if (q.mediaSettings.message) mediaTypeMap.set(q.id, 'message');
-            else mediaTypeMap.set(q.id, 'unknown');
-          } else {
-            mediaTypeMap.set(q.id, 'unknown');
+            // Check each possible media type
+            if (q.mediaSettings.call) mediaType = 'call';
+            else if (q.mediaSettings.email) mediaType = 'email';
+            else if (q.mediaSettings.chat) mediaType = 'chat';
+            else if (q.mediaSettings.message) mediaType = 'message';
+            else if (q.mediaSettings.callback) mediaType = 'callback';
+            else if (q.mediaSettings.video) mediaType = 'video';
           }
+          
+          // Also check the queue's media settings in the response structure
+          if (q.mediaSettings === undefined) {
+            // Try to infer from other properties
+            if (q.name?.toLowerCase().includes('call')) mediaType = 'call';
+            else if (q.name?.toLowerCase().includes('email')) mediaType = 'email';
+            else if (q.name?.toLowerCase().includes('chat')) mediaType = 'chat';
+            else if (q.name?.toLowerCase().includes('message')) mediaType = 'message';
+            else if (q.name?.toLowerCase().includes('callback')) mediaType = 'callback';
+            else if (q.name?.toLowerCase().includes('video')) mediaType = 'video';
+          }
+          
+          mediaTypeMap.set(q.id, mediaType);
         });
         
         all = all.concat(queues);
@@ -754,7 +819,7 @@
           if (containerId.includes('queue') && o.value) {
             const mediaType = mediaTypeMap.get(o.value);
             if (mediaType && mediaType !== 'unknown') {
-              mediaTag = `<span class="queue-media-tag media-${mediaType}">${mediaType}</span>`;
+              mediaTag = `<span class="queue-media-tag">${mediaType}</span>`;
             }
           }
           
@@ -908,7 +973,7 @@
       el.innerHTML = queueIds.map(id=>{
         const q = availableQueues.find(q=>q.id===id);
         const mediaType = mediaTypeMap.get(id);
-        const mediaTag = mediaType && mediaType !== 'unknown' ? `<span class="queue-media-tag media-${mediaType}" style="margin-left:4px;">${mediaType}</span>` : '';
+        const mediaTag = mediaType && mediaType !== 'unknown' ? `<span class="queue-media-tag">${mediaType}</span>` : '';
         return `<div class="selected-queue-item">${q ? q.name : id}${mediaTag}</div>`;
       }).join('');
     }
@@ -977,13 +1042,13 @@
     }
 
     function setupMediaTypeControls() {
+      // Call/Voice
+      document.getElementById('activateAllCall').addEventListener('click', () => handleMediaTypeAction('call', true));
+      document.getElementById('deactivateAllCall').addEventListener('click', () => handleMediaTypeAction('call', false));
+      
       // Email
       document.getElementById('activateAllEmail').addEventListener('click', () => handleMediaTypeAction('email', true));
       document.getElementById('deactivateAllEmail').addEventListener('click', () => handleMediaTypeAction('email', false));
-      
-      // Call
-      document.getElementById('activateAllCall').addEventListener('click', () => handleMediaTypeAction('call', true));
-      document.getElementById('deactivateAllCall').addEventListener('click', () => handleMediaTypeAction('call', false));
       
       // Chat
       document.getElementById('activateAllChat').addEventListener('click', () => handleMediaTypeAction('chat', true));
@@ -992,6 +1057,14 @@
       // Message
       document.getElementById('activateAllMessage').addEventListener('click', () => handleMediaTypeAction('message', true));
       document.getElementById('deactivateAllMessage').addEventListener('click', () => handleMediaTypeAction('message', false));
+
+      // Callback
+      document.getElementById('activateAllCallback').addEventListener('click', () => handleMediaTypeAction('callback', true));
+      document.getElementById('deactivateAllCallback').addEventListener('click', () => handleMediaTypeAction('callback', false));
+
+      // Video
+      document.getElementById('activateAllVideo').addEventListener('click', () => handleMediaTypeAction('video', true));
+      document.getElementById('deactivateAllVideo').addEventListener('click', () => handleMediaTypeAction('video', false));
     }
 
     async function refreshCurrentView(mode){
@@ -1197,7 +1270,7 @@
       updateMediaTypeCounts();
     }
 
-    /********* FETCH QUEUE MEMBERS WITH STATUS - NEW FUNCTION *********/
+    /********* FETCH QUEUE MEMBERS WITH STATUS *********/
     async function fetchQueueMembersWithStatus(queueId) {
       let all = [];
       let page = 1;
@@ -1443,14 +1516,13 @@
         
         // Get media type for display
         const mediaType = m.mediaType || 'unknown';
-        const mediaClass = `media-${mediaType}`;
         
         row.innerHTML = `
           <td><input type="checkbox" class="activate-checkbox" data-user-id="${m.userId}" data-queue-id="${m.queueId}" data-current-status="${m.joined}" data-media-type="${mediaType}"></td>
           <td>${m.userName}</td>
           <td>
             ${m.queueName}
-            ${mediaType !== 'unknown' ? `<span class="queue-media-tag ${mediaClass}">${mediaType}</span>` : ''}
+            ${mediaType !== 'unknown' ? `<span class="queue-media-tag">${mediaType}</span>` : ''}
           </td>
           <td><span class="status-badge ${statusClass}">${statusText}</span></td>
           <td>
@@ -1509,12 +1581,14 @@
     function updateMediaTypeCounts() {
       const checkedBoxes = [...document.querySelectorAll('.activate-checkbox:checked')];
       
-      // Count by media type
+      // Initialize counts for all media types
       const counts = {
-        email: 0,
         call: 0,
+        email: 0,
         chat: 0,
-        message: 0
+        message: 0,
+        callback: 0,
+        video: 0
       };
       
       checkedBoxes.forEach(cb => {
@@ -1524,18 +1598,24 @@
         }
       });
       
-      // Update button labels
-      document.querySelector('#activateAllEmail small').textContent = `${counts.email} selected`;
-      document.querySelector('#deactivateAllEmail small').textContent = `${counts.email} selected`;
+      // Update button counts
+      document.getElementById('callActivateCount').textContent = counts.call;
+      document.getElementById('callDeactivateCount').textContent = counts.call;
       
-      document.querySelector('#activateAllCall small').textContent = `${counts.call} selected`;
-      document.querySelector('#deactivateAllCall small').textContent = `${counts.call} selected`;
+      document.getElementById('emailActivateCount').textContent = counts.email;
+      document.getElementById('emailDeactivateCount').textContent = counts.email;
       
-      document.querySelector('#activateAllChat small').textContent = `${counts.chat} selected`;
-      document.querySelector('#deactivateAllChat small').textContent = `${counts.chat} selected`;
+      document.getElementById('chatActivateCount').textContent = counts.chat;
+      document.getElementById('chatDeactivateCount').textContent = counts.chat;
       
-      document.querySelector('#activateAllMessage small').textContent = `${counts.message} selected`;
-      document.querySelector('#deactivateAllMessage small').textContent = `${counts.message} selected`;
+      document.getElementById('messageActivateCount').textContent = counts.message;
+      document.getElementById('messageDeactivateCount').textContent = counts.message;
+      
+      document.getElementById('callbackActivateCount').textContent = counts.callback;
+      document.getElementById('callbackDeactivateCount').textContent = counts.callback;
+      
+      document.getElementById('videoActivateCount').textContent = counts.video;
+      document.getElementById('videoDeactivateCount').textContent = counts.video;
     }
 
     /********* REMOVE QUEUE *********/
