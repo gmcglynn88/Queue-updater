@@ -456,7 +456,7 @@
       <!-- Media Type Quick Actions -->
       <div class="media-type-section">
         <h3 style="margin-top:0;">Quick Actions by Media Type</h3>
-        <p class="muted">Apply activation/deactivation to all queues of a specific media type for selected users</p>
+        <p class="muted">Apply activation/deactivation to all selected queues of a specific media type</p>
         <div class="media-type-buttons">
           <button class="media-btn email" id="activateAllEmail">
             Activate All Email
@@ -1511,38 +1511,31 @@
       
       // Count by media type
       const counts = {
-        email: { total: 0, active: 0, inactive: 0 },
-        call: { total: 0, active: 0, inactive: 0 },
-        chat: { total: 0, active: 0, inactive: 0 },
-        message: { total: 0, active: 0, inactive: 0 }
+        email: 0,
+        call: 0,
+        chat: 0,
+        message: 0
       };
       
       checkedBoxes.forEach(cb => {
         const mediaType = cb.getAttribute('data-media-type');
-        const isActive = cb.getAttribute('data-current-status') === 'true';
-        
-        if (counts[mediaType]) {
-          counts[mediaType].total++;
-          if (isActive) {
-            counts[mediaType].active++;
-          } else {
-            counts[mediaType].inactive++;
-          }
+        if (counts.hasOwnProperty(mediaType)) {
+          counts[mediaType]++;
         }
       });
       
       // Update button labels
-      document.querySelector('#activateAllEmail small').textContent = `${counts.email.inactive} to activate`;
-      document.querySelector('#deactivateAllEmail small').textContent = `${counts.email.active} to deactivate`;
+      document.querySelector('#activateAllEmail small').textContent = `${counts.email} selected`;
+      document.querySelector('#deactivateAllEmail small').textContent = `${counts.email} selected`;
       
-      document.querySelector('#activateAllCall small').textContent = `${counts.call.inactive} to activate`;
-      document.querySelector('#deactivateAllCall small').textContent = `${counts.call.active} to deactivate`;
+      document.querySelector('#activateAllCall small').textContent = `${counts.call} selected`;
+      document.querySelector('#deactivateAllCall small').textContent = `${counts.call} selected`;
       
-      document.querySelector('#activateAllChat small').textContent = `${counts.chat.inactive} to activate`;
-      document.querySelector('#deactivateAllChat small').textContent = `${counts.chat.active} to deactivate`;
+      document.querySelector('#activateAllChat small').textContent = `${counts.chat} selected`;
+      document.querySelector('#deactivateAllChat small').textContent = `${counts.chat} selected`;
       
-      document.querySelector('#activateAllMessage small').textContent = `${counts.message.inactive} to activate`;
-      document.querySelector('#deactivateAllMessage small').textContent = `${counts.message.active} to deactivate`;
+      document.querySelector('#activateAllMessage small').textContent = `${counts.message} selected`;
+      document.querySelector('#deactivateAllMessage small').textContent = `${counts.message} selected`;
     }
 
     /********* REMOVE QUEUE *********/
@@ -1768,12 +1761,11 @@
         return;
       }
 
-      // Filter by media type and current status
+      // Filter by media type only (ignore current status)
       const ops = checkedBoxes
         .filter(cb => {
           const cbMediaType = cb.getAttribute('data-media-type');
-          const isActive = cb.getAttribute('data-current-status') === 'true';
-          return cbMediaType === mediaType && ((activate && !isActive) || (!activate && isActive));
+          return cbMediaType === mediaType;
         })
         .map(cb => ({
           userId: cb.getAttribute('data-user-id'),
@@ -1782,7 +1774,7 @@
         }));
 
       if (!ops.length) {
-        showMessage(`No ${mediaType} ${activate ? 'inactive' : 'active'} items selected`);
+        showMessage(`No ${mediaType} queues selected`);
         return;
       }
 
