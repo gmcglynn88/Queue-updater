@@ -102,6 +102,20 @@
     .excl-btn:hover{opacity:.88}
     .excl-btn:disabled{opacity:.35;cursor:not-allowed;}
 
+    /* Team preview table */
+    .tq-preview{margin-top:16px;border:1px solid #bfdbfe;border-radius:8px;overflow:hidden;display:none;}
+    .tq-preview-hdr{background:#1d4ed8;color:#fff;padding:10px 14px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;}
+    .tq-preview-hdr .tq-member-count{background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:12px;}
+    .tq-preview-body{max-height:260px;overflow-y:auto;background:#fff;}
+    .tq-preview-body table{margin-top:0;}
+    .tq-preview-body th{background:#3b82f6;font-size:11px;}
+    .tq-excluded-badge{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:4px;font-size:10px;padding:1px 5px;font-weight:700;margin-left:4px;}
+    .tq-exclude-btn{padding:3px 8px;font-size:11px;background:#ef4444;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:600;}
+    .tq-exclude-btn.restore{background:#22c55e;}
+    .tq-exclude-btn:hover{opacity:.85;}
+    .tq-preview-footer{padding:8px 12px;background:#eff6ff;border-top:1px solid #bfdbfe;font-size:12px;color:#1d4ed8;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+    .tq-loading{padding:20px;text-align:center;color:var(--muted);font-size:13px;}
+
     /* Pending */
     .pending-panel{background:var(--pending-bg);border:1px solid var(--pending-border);border-radius:8px;padding:16px;margin-bottom:18px;display:none;}
     .pending-panel h3{margin:0 0 10px;color:#92400e;font-size:15px;}
@@ -125,6 +139,9 @@
     .tpanel-hdr button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:3px 10px;font-size:11px;border-radius:4px;cursor:pointer;font-weight:600;}
     .tpanel-hdr button:hover{background:rgba(255,255,255,.35);}
     .stage-chip{background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:12px;}
+
+    /* Media type column — centred icon-only cell */
+    .mt-col{text-align:center;width:90px;}
 
     @media(max-width:768px){
       .bulk-section{grid-template-columns:1fr;}
@@ -175,7 +192,10 @@
       <table id="tblRemove">
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saRemove"></th>
-          <th>Agent</th><th>Queues Assigned</th><th style="width:220px;">Remove Queue</th>
+          <th>Agent</th>
+          <th>Queues Assigned</th>
+          <th class="mt-col">Media</th>
+          <th style="width:220px;">Remove Queue</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -211,7 +231,10 @@
       <table id="tblAdd">
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saAdd"></th>
-          <th>Agent</th><th>Queues Assigned</th><th style="width:220px;">Add Queue</th>
+          <th>Agent</th>
+          <th>Queues Assigned</th>
+          <th class="mt-col">Media</th>
+          <th style="width:220px;">Add Queue</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -267,6 +290,21 @@
         <button class="excl-btn" data-mt="callback" disabled>🔄 Callback</button>
       </div>
       <div class="muted" style="margin-top:10px;" id="tqStatus"></div>
+
+      <!-- TEAM PREVIEW TABLE -->
+      <div class="tq-preview" id="tqPreview">
+        <div class="tq-preview-hdr">
+          👥 Team Members
+          <span class="tq-member-count" id="tqMemberCount">0 members</span>
+        </div>
+        <div class="tq-preview-body" id="tqPreviewBody">
+          <div class="tq-loading">Loading team members…</div>
+        </div>
+        <div class="tq-preview-footer">
+          <span id="tqPreviewSummary"></span>
+          <button id="tqClearExclusions" style="padding:4px 10px;font-size:12px;background:#6c757d;border:none;border-radius:4px;color:#fff;cursor:pointer;font-weight:600;">Reset exclusions</button>
+        </div>
+      </div>
     </div>
 
     <!-- MEDIA QUICK ACTIONS (table rows) -->
@@ -298,10 +336,12 @@
             <table>
               <thead><tr>
                 <th style="width:36px;"><input type="checkbox" id="saCurrent"></th>
-                <th>Agent</th><th>Queue</th><th>Status</th>
+                <th>Agent</th><th>Queue</th>
+                <th class="mt-col">Media</th>
+                <th>Status</th>
               </tr></thead>
               <tbody id="tbodyCurrent">
-                <tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">Load users above to populate</td></tr>
+                <tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Load users above to populate</td></tr>
               </tbody>
             </table>
           </div>
@@ -314,10 +354,12 @@
           <div style="overflow-x:auto;">
             <table>
               <thead><tr>
-                <th>Agent</th><th>Queue</th><th>Change</th><th style="width:32px;"></th>
+                <th>Agent</th><th>Queue</th>
+                <th class="mt-col">Media</th>
+                <th>Change</th><th style="width:32px;"></th>
               </tr></thead>
               <tbody id="tbodyStaged">
-                <tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">No staged changes</td></tr>
+                <tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">No staged changes</td></tr>
               </tbody>
             </table>
           </div>
@@ -341,67 +383,38 @@ const API = 'https://api.mypurecloud.ie/api/v2';
 
 let token = null;
 let allUsers=[], allQueues=[], allTeams=[], allMUs=[];
-const qMediaType = new Map();   // queueId → 'voice'|'email'|'chat'|'message'|'callback'
+const qMediaType = new Map();
 let activeMemberships = [];
 let pendingChanges = [];
 let fetchedData = {usersWithQueues:[],queueIds:[]};
 
-/* ── MEDIA TYPE DETECTION ──────────────────────────────────────────────
-   The Genesys Cloud queue API returns ALL media types in mediaSettings
-   for every queue, because every queue CAN handle any type.
-   
-   The actual type of a queue is determined by:
-   1. Queue name keywords (most reliable when naming conventions exist)
-   2. Whether mediaSettings.callback has a "mode" field (callback-specific)
-   3. Alerting timeouts:
-      - email is typically 86400 s (24h) or at least 300 s (5 min)
-      - callback has mode field (AgentFirst/External/TimedOut)
-      - voice/call is 7-59 s (very short)
-      - chat/message are moderate (30-120 s)
-   4. Whichever media type has the shortest (most "active") timeout
-──────────────────────────────────────────────────────────────────── */
+// Team preview state
+let tqTeamMembers = [];     // [{id, name}]
+let tqExcluded = new Set(); // user IDs excluded from the quick action
+
+/* ── MEDIA TYPE DETECTION ── */
 function detectMediaType(q) {
   const ms = q.mediaSettings || {};
   const name = (q.name||'').toLowerCase();
-
-  // 1. Name keywords (highest confidence)
   if (/\bemail\b/.test(name))                                       return 'email';
   if (/\bchat\b/.test(name))                                        return 'chat';
   if (/\bcallback\b|\bcall.back\b/.test(name))                      return 'callback';
   if (/\bmessage\b|\bmsg\b|\bsms\b|\bwhatsapp\b|\bsocial\b/.test(name)) return 'message';
   if (/\bvoice\b|\bcall\b|\bphone\b|\btelephon/.test(name))         return 'voice';
-
-  // 2. Callback has a unique "mode" field in its settings object
   if (ms.callback && ms.callback.mode !== undefined)                 return 'callback';
-
-  // 3. Email has a very long alerting timeout (default 86400 s = 24h, min 300s)
   const emailTO = ms.email ? (ms.email.alertingTimeoutSeconds || 0) : 0;
   if (emailTO >= 300)                                                return 'email';
-
-  // 4. Compare remaining types by their alerting timeout
-  //    Voice/call = 7-59s  |  Chat = 30-120s  |  Message = 30-300s
   const callTO = ms.call    ? (ms.call.alertingTimeoutSeconds    || 0) : 0;
   const chatTO = ms.chat    ? (ms.chat.alertingTimeoutSeconds    || 0) : 0;
   const msgTO  = ms.message ? (ms.message.alertingTimeoutSeconds || 0) : 0;
-
-  // Build candidate list with non-zero timeouts only
   const candidates = [
     {type:'voice',   v: callTO},
     {type:'chat',    v: chatTO},
     {type:'message', v: msgTO},
     {type:'email',   v: emailTO},
   ].filter(c => c.v > 0);
-
-  if (candidates.length > 0) {
-    // The configured type typically has the most specifically tuned timeout.
-    // Email is already ruled out above.
-    // Voice/call has the shortest timeout (most time-sensitive).
-    // Sort ascending and pick the shortest.
-    candidates.sort((a,b) => a.v - b.v);
-    return candidates[0].type;
-  }
-
-  return 'voice'; // safe default
+  if (candidates.length > 0) { candidates.sort((a,b) => a.v - b.v); return candidates[0].type; }
+  return 'voice';
 }
 
 const MT_INFO = {
@@ -581,9 +594,92 @@ function populateTeamQuickSelect(){
   [...allTeams].sort((a,b)=>a.name.localeCompare(b.name)).forEach(t=>{
     sel.insertAdjacentHTML('beforeend',`<option value="${t.id}">${t.name}</option>`);
   });
-  sel.addEventListener('change',()=>{
-    const ok=!!sel.value;
-    document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=!ok);
+  sel.addEventListener('change', async ()=>{
+    const teamId = sel.value;
+    // Reset exclusions and preview
+    tqExcluded.clear();
+    tqTeamMembers = [];
+    const previewEl = document.getElementById('tqPreview');
+    const bodyEl    = document.getElementById('tqPreviewBody');
+    const btns      = document.querySelectorAll('#tqButtons .excl-btn');
+
+    if(!teamId){
+      previewEl.style.display = 'none';
+      btns.forEach(b=>b.disabled=true);
+      return;
+    }
+
+    // Show preview panel with loading state
+    previewEl.style.display = 'block';
+    bodyEl.innerHTML = '<div class="tq-loading">⏳ Loading team members…</div>';
+    document.getElementById('tqMemberCount').textContent = '…';
+    btns.forEach(b=>b.disabled=true);
+
+    try{
+      const memberIds = await getTeamUserIds(teamId);
+      const valid = allUsers.filter(u=>u.name&&u.name.trim()&&u.name!=='Unknown User');
+      tqTeamMembers = memberIds.map(id=>valid.find(u=>u.id===id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
+      renderTQPreview();
+      btns.forEach(b=>b.disabled=false);
+    }catch(e){
+      bodyEl.innerHTML = `<div class="tq-loading" style="color:#dc2626;">Error loading members: ${e.message}</div>`;
+    }
+  });
+}
+
+/* ── TEAM PREVIEW TABLE ── */
+function renderTQPreview(){
+  const bodyEl  = document.getElementById('tqPreviewBody');
+  const countEl = document.getElementById('tqMemberCount');
+  const summEl  = document.getElementById('tqPreviewSummary');
+  const total   = tqTeamMembers.length;
+  const excN    = tqExcluded.size;
+  const activeN = total - excN;
+
+  countEl.textContent = `${total} member${total!==1?'s':''}`;
+  summEl.textContent  = excN > 0
+    ? `${activeN} will be changed · ${excN} excluded`
+    : `All ${total} members will be changed`;
+
+  if(!total){
+    bodyEl.innerHTML = '<div class="tq-loading">No members found in this team.</div>';
+    return;
+  }
+
+  const tbl = document.createElement('table');
+  tbl.innerHTML = `<thead><tr>
+    <th>#</th>
+    <th>Agent Name</th>
+    <th style="width:110px;text-align:center;">Include?</th>
+  </tr></thead>`;
+  const tbody = document.createElement('tbody');
+
+  tqTeamMembers.forEach((u,i)=>{
+    const excluded = tqExcluded.has(u.id);
+    const row = document.createElement('tr');
+    if(excluded) row.style.opacity='0.45';
+    row.innerHTML = `
+      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
+      <td>${u.name}${excluded?'<span class="tq-excluded-badge">Excluded</span>':''}</td>
+      <td style="text-align:center;">
+        <button class="tq-exclude-btn ${excluded?'restore':''}" data-uid="${u.id}">
+          ${excluded?'✓ Restore':'✕ Exclude'}
+        </button>
+      </td>`;
+    tbody.appendChild(row);
+  });
+
+  tbl.appendChild(tbody);
+  bodyEl.innerHTML='';
+  bodyEl.appendChild(tbl);
+
+  bodyEl.querySelectorAll('.tq-exclude-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const uid = btn.dataset.uid;
+      if(tqExcluded.has(uid)) tqExcluded.delete(uid);
+      else tqExcluded.add(uid);
+      renderTQPreview();
+    });
   });
 }
 
@@ -674,9 +770,9 @@ async function resolveUsers(mode){
 /* ── FETCH USERS (remove/add) ── */
 async function fetchUsers(mode){
   const tbody=document.querySelector(`#tbl${cap(mode)} tbody`);
-  tbody.innerHTML=`<tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>`;
   const users=await resolveUsers(mode);
-  if(!users||!users.length){tbody.innerHTML='<tr><td colspan="4">No users found</td></tr>';return;}
+  if(!users||!users.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';return;}
   const queueIds=dd.queue[mode].get();
   const uwq=await Promise.all(users.map(async u=>({user:u,queues:await fetchUserQueues(u.id)})));
   let filtered=uwq;
@@ -693,21 +789,34 @@ async function fetchUsers(mode){
 function renderRemoveTable(list){
   const tbody=document.querySelector('#tblRemove tbody');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="4">No users found</td></tr>';updateRemoveBtn();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';updateRemoveBtn();return;}
   list.forEach(({user,queues})=>{
-    const opts=queues.length?['<option value="">Select Queue</option>',...queues.map(q=>`<option value="${q.id}">${q.name} (${qMediaType.get(q.id)||'?'})</option>`)]
+    // For the selected queue in the dropdown, show its media type in the Media column
+    const opts=queues.length?['<option value="">Select Queue</option>',...queues.map(q=>`<option value="${q.id}" data-mt="${qMediaType.get(q.id)||'unknown'}">${q.name}</option>`)]
       :['<option value="">No queues</option>'];
     const row=document.createElement('tr');
     row.innerHTML=`
       <td><input type="checkbox" class="cb-remove" data-uid="${user.id}"></td>
       <td>${user.name}</td>
-      <td style="font-size:12px;">${queues.length?queues.map(q=>`${q.name}${mtBadge(qMediaType.get(q.id)||'unknown')}`).join(' '):'No queues'}</td>
+      <td style="font-size:12px;">${queues.length?queues.map(q=>q.name).join(', '):'No queues'}</td>
+      <td class="mt-col"><span class="sel-mt-badge-remove" data-uid="${user.id}"></span></td>
       <td><select class="sel-remove" data-uid="${user.id}" ${queues.length?'':'disabled'} style="width:100%;font-size:12px;">${opts.join('')}</select></td>`;
     tbody.appendChild(row);
   });
   document.querySelectorAll('.cb-remove').forEach(cb=>cb.addEventListener('change',updateRemoveBtn));
   document.querySelectorAll('.sel-remove').forEach(sel=>sel.addEventListener('change',function(){
-    if(this.value){const cb=document.querySelector(`.cb-remove[data-uid="${this.dataset.uid}"]`);if(cb)cb.checked=true;}
+    if(this.value){
+      const cb=document.querySelector(`.cb-remove[data-uid="${this.dataset.uid}"]`);
+      if(cb)cb.checked=true;
+      // Update media badge
+      const selOpt = this.options[this.selectedIndex];
+      const mt = selOpt ? selOpt.getAttribute('data-mt') : 'unknown';
+      const badge = document.querySelector(`.sel-mt-badge-remove[data-uid="${this.dataset.uid}"]`);
+      if(badge) badge.innerHTML = mtBadge(mt||'unknown');
+    } else {
+      const badge = document.querySelector(`.sel-mt-badge-remove[data-uid="${this.dataset.uid}"]`);
+      if(badge) badge.innerHTML = '';
+    }
     updateRemoveBtn();
   }));
   updateRemoveBtn();
@@ -722,24 +831,36 @@ function updateRemoveBtn(){
 function renderAddTable(list,preIds=[]){
   const tbody=document.querySelector('#tblAdd tbody');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="4">No users found</td></tr>';updateAddBtn();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';updateAddBtn();return;}
   list.forEach(({user,queues})=>{
     const assigned=queues.map(q=>q.id);
     const choices=allQueues.filter(q=>!assigned.includes(q.id));
     const pre=preIds.find(id=>choices.some(c=>c.id===id))||'';
-    const opts=choices.length?['<option value="">Select Queue</option>',...choices.map(q=>`<option value="${q.id}" ${q.id===pre?'selected':''}>${q.name} (${qMediaType.get(q.id)||'?'})</option>`)]
+    const opts=choices.length?['<option value="">Select Queue</option>',...choices.map(q=>`<option value="${q.id}" data-mt="${qMediaType.get(q.id)||'unknown'}" ${q.id===pre?'selected':''}>${q.name}</option>`)]
       :['<option value="">All assigned</option>'];
+    const initialMt = pre ? (qMediaType.get(pre)||'unknown') : null;
     const row=document.createElement('tr');
     row.innerHTML=`
       <td><input type="checkbox" class="cb-add" data-uid="${user.id}"></td>
       <td>${user.name}</td>
-      <td style="font-size:12px;">${queues.length?queues.map(q=>`${q.name}${mtBadge(qMediaType.get(q.id)||'unknown')}`).join(' '):'No queues'}</td>
+      <td style="font-size:12px;">${queues.length?queues.map(q=>q.name).join(', '):'No queues'}</td>
+      <td class="mt-col"><span class="sel-mt-badge-add" data-uid="${user.id}">${initialMt?mtBadge(initialMt):''}</span></td>
       <td><select class="sel-add" data-uid="${user.id}" ${choices.length?'':'disabled'} style="width:100%;font-size:12px;">${opts.join('')}</select></td>`;
     tbody.appendChild(row);
   });
   document.querySelectorAll('.cb-add').forEach(cb=>cb.addEventListener('change',updateAddBtn));
   document.querySelectorAll('.sel-add').forEach(sel=>sel.addEventListener('change',function(){
-    if(this.value){const cb=document.querySelector(`.cb-add[data-uid="${this.dataset.uid}"]`);if(cb)cb.checked=true;}
+    if(this.value){
+      const cb=document.querySelector(`.cb-add[data-uid="${this.dataset.uid}"]`);
+      if(cb)cb.checked=true;
+      const selOpt = this.options[this.selectedIndex];
+      const mt = selOpt ? selOpt.getAttribute('data-mt') : 'unknown';
+      const badge = document.querySelector(`.sel-mt-badge-add[data-uid="${this.dataset.uid}"]`);
+      if(badge) badge.innerHTML = mtBadge(mt||'unknown');
+    } else {
+      const badge = document.querySelector(`.sel-mt-badge-add[data-uid="${this.dataset.uid}"]`);
+      if(badge) badge.innerHTML = '';
+    }
     updateAddBtn();
   }));
   updateAddBtn();
@@ -758,7 +879,7 @@ async function fetchActivationData(){
   const teamIds=dd.team.activate.get(),muIds=dd.mu.activate.get();
   const sf=document.getElementById('statusFilter').value;
   if(!agentIds.length&&!queueIds.length&&!teamIds.length&&!muIds.length){showMsg('Select at least one filter');return;}
-  document.getElementById('tbodyCurrent').innerHTML='<tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>';
+  document.getElementById('tbodyCurrent').innerHTML='<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>';
 
   let targetUsers=new Set();
   if(agentIds.length) agentIds.forEach(id=>targetUsers.add(id));
@@ -799,7 +920,7 @@ async function fetchActivationData(){
 function renderCurrentTable(list){
   const tbody=document.getElementById('tbodyCurrent');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">No memberships found</td></tr>';updateActivateBtns();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">No memberships found</td></tr>';updateActivateBtns();return;}
   const sorted=[...list].sort((a,b)=>a.userName.localeCompare(b.userName)||a.queueName.localeCompare(b.queueName));
   sorted.forEach(m=>{
     const pend=getPending(m.userId,m.queueId);
@@ -810,7 +931,8 @@ function renderCurrentTable(list){
     row.innerHTML=`
       <td><input type="checkbox" class="cb-act" data-uid="${m.userId}" data-qid="${m.queueId}" data-joined="${effJoined}" data-mt="${m.mediaType}"></td>
       <td>${m.userName}</td>
-      <td>${m.queueName}${mtBadge(m.mediaType)}${hasPend?'<span class="pbadge">Pending</span>':''}</td>
+      <td>${m.queueName}${hasPend?'<span class="pbadge">Pending</span>':''}</td>
+      <td class="mt-col">${mtBadge(m.mediaType)}</td>
       <td><span class="sb ${effJoined?'sb-active':'sb-inactive'}">${effJoined?'Active':'Inactive'}</span></td>`;
     tbody.appendChild(row);
   });
@@ -840,7 +962,7 @@ function renderStagedTable(){
   cnt.textContent=pendingChanges.length;
   applyAll.disabled=!pendingChanges.length;
   if(!pendingChanges.length){
-    tbody.innerHTML='<tr><td colspan="4" class="muted" style="padding:20px;text-align:center;">No staged changes</td></tr>';
+    tbody.innerHTML='<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">No staged changes</td></tr>';
     panel.style.display='none';return;
   }
   panel.style.display='block';
@@ -852,7 +974,8 @@ function renderStagedTable(){
   tbody.innerHTML='';
   [...pendingChanges].sort((a,b)=>a.userName.localeCompare(b.userName)).forEach(c=>{
     const row=document.createElement('tr');
-    row.innerHTML=`<td>${c.userName}</td><td>${c.queueName}${mtBadge(c.mediaType)}</td>
+    row.innerHTML=`<td>${c.userName}</td><td>${c.queueName}</td>
+      <td class="mt-col">${mtBadge(c.mediaType)}</td>
       <td><span class="sb ${c.activate?'sb-active':'sb-inactive'}">${c.activate?'→ Activate':'→ Deactivate'}</span></td>
       <td><span class="remove-p" data-uid="${c.userId}" data-qid="${c.queueId}" title="Remove">✕</span></td>`;
     tbody.appendChild(row);
@@ -882,10 +1005,7 @@ function updateMQCounts(){
   });
 }
 
-/* ── TEAM QUICK ACTION ─────────────────────────────────────────────────
-   Applies directly (no staging) since it can affect hundreds of records.
-   Callback is treated as Voice for exclusive mode.
-────────────────────────────────────────────────────────────────────── */
+/* ── TEAM QUICK ACTION ── */
 async function runTeamQuickAction(mt){
   const teamId=document.getElementById('tqTeamSelect').value;
   const action=document.getElementById('tqAction').value;
@@ -894,15 +1014,15 @@ async function runTeamQuickAction(mt){
   document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=true);
   statusEl.textContent='Fetching team members…';
   try{
-    const userIds=await getTeamUserIds(teamId);
-    if(!userIds.length){showMsg('No users in that team');return;}
-    const teamSet=new Set(userIds);
-    statusEl.textContent=`${userIds.length} users found — fetching queue memberships…`;
+    // Use already-loaded tqTeamMembers, but filter out excluded users
+    const activeMembers = tqTeamMembers.filter(u=>!tqExcluded.has(u.id));
+    if(!activeMembers.length){showMsg('No users to process (all excluded or empty team)');return;}
+    const teamSet=new Set(activeMembers.map(u=>u.id));
+    statusEl.textContent=`${activeMembers.length} users (${tqExcluded.size} excluded) — fetching queue memberships…`;
 
-    // Decide which queues to process
     const isExclusive = action==='exclusive';
     const queuesToCheck = isExclusive
-      ? allQueues  // need all to know what to deactivate
+      ? allQueues
       : allQueues.filter(q=>{
           const qmt=qMediaType.get(q.id)||'voice';
           return qmt===mt || (mt==='voice' && qmt==='callback');
@@ -942,7 +1062,7 @@ async function runTeamQuickAction(mt){
     }
     if(failed)showMsg(`${failed} failures out of ${ops.length}`);
     else showMsg(`✅ Applied ${done} change${done!==1?'s':''}`,'success');
-    statusEl.textContent=`Done — ${done} change${done!==1?'s':''} applied.`;
+    statusEl.textContent=`Done — ${done} change${done!==1?'s':''} applied${tqExcluded.size>0?` (${tqExcluded.size} users excluded)`:''}.`;
   }catch(e){
     console.error(e);showMsg(`Error: ${e.message}`);statusEl.textContent='';
   }finally{
@@ -1057,6 +1177,11 @@ function wireEvents(){
   document.getElementById('saCurrent').addEventListener('change',function(){document.querySelectorAll('.cb-act').forEach(cb=>cb.checked=this.checked);updateActivateBtns();updateMQCounts();});
 
   document.querySelectorAll('#tqButtons .excl-btn').forEach(btn=>btn.addEventListener('click',()=>runTeamQuickAction(btn.getAttribute('data-mt'))));
+
+  document.getElementById('tqClearExclusions').addEventListener('click',()=>{
+    tqExcluded.clear();
+    if(tqTeamMembers.length) renderTQPreview();
+  });
 }
 </script>
 </body>
