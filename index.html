@@ -140,6 +140,13 @@
     .tpanel-hdr button:hover{background:rgba(255,255,255,.35);}
     .stage-chip{background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:12px;}
 
+
+    /* Sortable columns */
+    th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:22px;}
+    th.sortable::after{content:'\00a0\21C5';position:absolute;right:6px;opacity:.45;font-size:11px;}
+    th.sortable.asc::after{content:'\00a0\25B2';opacity:1;}
+    th.sortable.desc::after{content:'\00a0\25BC';opacity:1;}
+    th.sortable:hover{background:var(--secondary);}
     /* Media type column — centred icon-only cell */
     .mt-col{text-align:center;width:90px;white-space:nowrap;}
 
@@ -192,8 +199,8 @@
       <table id="tblRemove">
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saRemove"></th>
-          <th>Agent</th>
-          <th>Queues Assigned</th>
+          <th class="sortable" data-sort="name" data-table="tblRemove">Agent</th>
+          <th class="sortable" data-sort="queues" data-table="tblRemove">Queues Assigned</th>
           <th class="mt-col">Media</th>
           <th style="width:220px;">Remove Queue</th>
         </tr></thead>
@@ -231,8 +238,8 @@
       <table id="tblAdd">
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saAdd"></th>
-          <th>Agent</th>
-          <th>Queues Assigned</th>
+          <th class="sortable" data-sort="name" data-table="tblAdd">Agent</th>
+          <th class="sortable" data-sort="queues" data-table="tblAdd">Queues Assigned</th>
           <th class="mt-col">Media</th>
           <th style="width:220px;">Add Queue</th>
         </tr></thead>
@@ -334,11 +341,12 @@
           </div>
           <div style="overflow-x:auto;">
             <table>
-              <thead><tr>
+              <thead id="theadCurrent"><tr>
                 <th style="width:36px;"><input type="checkbox" id="saCurrent"></th>
-                <th>Agent</th><th>Queue</th>
-                <th class="mt-col">Media</th>
-                <th>Status</th>
+                <th class="sortable" data-sort="agent" data-target="tbodyCurrent">Agent</th>
+                <th class="sortable" data-sort="queue" data-target="tbodyCurrent">Queue</th>
+                <th class="mt-col sortable" data-sort="media" data-target="tbodyCurrent">Media</th>
+                <th class="sortable" data-sort="status" data-target="tbodyCurrent">Status</th>
               </tr></thead>
               <tbody id="tbodyCurrent">
                 <tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Load users above to populate</td></tr>
@@ -353,10 +361,12 @@
           </div>
           <div style="overflow-x:auto;">
             <table>
-              <thead><tr>
-                <th>Agent</th><th>Queue</th>
-                <th class="mt-col">Media</th>
-                <th>Change</th><th style="width:32px;"></th>
+              <thead id="theadStaged"><tr>
+                <th class="sortable" data-sort="agent" data-target="tbodyStaged">Agent</th>
+                <th class="sortable" data-sort="queue" data-target="tbodyStaged">Queue</th>
+                <th class="mt-col sortable" data-sort="media" data-target="tbodyStaged">Media</th>
+                <th class="sortable" data-sort="change" data-target="tbodyStaged">Change</th>
+                <th style="width:32px;"></th>
               </tr></thead>
               <tbody id="tbodyStaged">
                 <tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">No staged changes</td></tr>
@@ -645,18 +655,18 @@ function renderTQPreview(){
 
   const tbl = document.createElement('table');
   tbl.innerHTML = `<thead><tr>
-    <th>#</th>
-    <th>Agent Name</th>
+    <th class="sortable" data-sort="name" data-target="tqTbody">Agent Name</th>
     <th style="width:110px;text-align:center;">Include?</th>
   </tr></thead>`;
+  tbl.id = 'tqTable';
   const tbody = document.createElement('tbody');
+  tbody.id = 'tqTbody';
 
   tqTeamMembers.forEach((u,i)=>{
     const excluded = tqExcluded.has(u.id);
     const row = document.createElement('tr');
     if(excluded) row.style.opacity='0.45';
     row.innerHTML = `
-      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
       <td>${u.name}${excluded?'<span class="tq-excluded-badge">Excluded</span>':''}</td>
       <td style="text-align:center;">
         <button class="tq-exclude-btn ${excluded?'restore':''}" data-uid="${u.id}">
@@ -925,6 +935,10 @@ function renderCurrentTable(list){
     const hasPend=pend!==null;
     const row=document.createElement('tr');
     if(hasPend)row.className='pending-row';
+    row.dataset.sortkeyAgent  = m.userName.toLowerCase();
+    row.dataset.sortkeyQueue  = m.queueName.toLowerCase();
+    row.dataset.sortkeyMedia  = m.mediaType.toLowerCase();
+    row.dataset.sortkeyStatus = effJoined ? 'active' : 'inactive';
     row.innerHTML=`
       <td><input type="checkbox" class="cb-act" data-uid="${m.userId}" data-qid="${m.queueId}" data-joined="${effJoined}" data-mt="${m.mediaType}"></td>
       <td>${m.userName}</td>
@@ -971,6 +985,10 @@ function renderStagedTable(){
   tbody.innerHTML='';
   [...pendingChanges].sort((a,b)=>a.userName.localeCompare(b.userName)).forEach(c=>{
     const row=document.createElement('tr');
+    row.dataset.sortkeyAgent  = c.userName.toLowerCase();
+    row.dataset.sortkeyQueue  = c.queueName.toLowerCase();
+    row.dataset.sortkeyMedia  = c.mediaType.toLowerCase();
+    row.dataset.sortkeyChange = c.activate ? 'activate' : 'deactivate';
     row.innerHTML=`<td>${c.userName}</td><td>${c.queueName}</td>
       <td class="mt-col">${mtBadge(c.mediaType)}</td>
       <td><span class="sb ${c.activate?'sb-active':'sb-inactive'}">${c.activate?'→ Activate':'→ Deactivate'}</span></td>
@@ -1145,8 +1163,112 @@ async function applyBulkAdd(){
   btn.disabled=false;btn.textContent='Apply to Selected Users';await fetchUsers('add');
 }
 
+
+/* ── SORTABLE TABLES ───────────────────────────────────────────────────
+   Works for:
+   - Remove / Add tables  (data-sort on static th, data-table = table id)
+   - Current / Staged / TQ preview (data-sort on th, data-target = tbody id)
+─────────────────────────────────────────────────────────────────────── */
+const _sortState = {};  // key -> {col, dir}
+
+function getSortKey(key){ return _sortState[key] || {col:null,dir:'asc'}; }
+
+function applySortIndicators(ths, col, dir){
+  ths.forEach(th=>{
+    th.classList.remove('asc','desc');
+    if(th.dataset.sort===col) th.classList.add(dir);
+  });
+}
+
+// Generic sort for a tbody whose rows have data-* attributes
+function sortTbodyByAttr(tbodyId, col, dir){
+  const tbody = document.getElementById(tbodyId);
+  if(!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr')];
+  if(rows.length <= 1) return;
+  rows.sort((a,b)=>{
+    const av = (a.dataset[col]||a.cells[0]?.textContent||'').toLowerCase();
+    const bv = (b.dataset[col]||b.cells[0]?.textContent||'').toLowerCase();
+    return dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+// Sort for Remove/Add tables (rows have td text content)
+function sortFetchedTable(mode, col, dir){
+  const tableId = mode==='remove' ? 'tblRemove' : 'tblAdd';
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  if(!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr')];
+  if(rows.length <= 1) return;
+  const colIdx = col==='name' ? 1 : 2;  // Agent=1, Queues=2
+  rows.sort((a,b)=>{
+    const av = (a.cells[colIdx]?.textContent||'').trim().toLowerCase();
+    const bv = (b.cells[colIdx]?.textContent||'').trim().toLowerCase();
+    return dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+function wireTableSortHeaders(){
+  // Remove + Add static headers
+  ['tblRemove','tblAdd'].forEach(tblId=>{
+    const mode = tblId==='tblRemove' ? 'remove' : 'add';
+    document.querySelectorAll(`#${tblId} th.sortable`).forEach(th=>{
+      th.addEventListener('click',()=>{
+        const col = th.dataset.sort;
+        const st  = getSortKey(tblId);
+        const dir = (st.col===col && st.dir==='asc') ? 'desc' : 'asc';
+        _sortState[tblId] = {col, dir};
+        const ths = [...document.querySelectorAll(`#${tblId} th.sortable`)];
+        applySortIndicators(ths, col, dir);
+        sortFetchedTable(mode, col, dir);
+      });
+    });
+  });
+
+  // Current memberships + Staged + TQ preview (dynamic — use event delegation on document)
+  document.addEventListener('click', e=>{
+    const th = e.target.closest('th.sortable[data-target]');
+    if(!th) return;
+    const tbodyId = th.dataset.target;
+    const col     = th.dataset.sort;
+    const st      = getSortKey(tbodyId);
+    const dir     = (st.col===col && st.dir==='asc') ? 'desc' : 'asc';
+    _sortState[tbodyId] = {col, dir};
+    // Get sibling ths for indicator update
+    const ths = [...th.closest('thead').querySelectorAll('th.sortable')];
+    applySortIndicators(ths, col, dir);
+    sortTbodyByDataAttr(tbodyId, col, dir);
+  });
+}
+
+function sortTbodyByDataAttr(tbodyId, col, dir){
+  const tbody = document.getElementById(tbodyId);
+  if(!tbody) return;
+  const rows = [...tbody.querySelectorAll('tr[data-sortkey-agent], tr[data-sortkey-queue], tr')];
+
+  // Use data-sortkey-* attributes we'll add when rendering, falling back to cell text
+  const colMap = {
+    agent:  r => (r.dataset.sortkeyAgent  || r.cells[1]?.textContent || r.cells[0]?.textContent || '').toLowerCase(),
+    queue:  r => (r.dataset.sortkeyQueue  || r.cells[2]?.textContent || r.cells[1]?.textContent || '').toLowerCase(),
+    media:  r => (r.dataset.sortkeyMedia  || r.cells[3]?.textContent || r.cells[2]?.textContent || '').toLowerCase(),
+    status: r => (r.dataset.sortkeyStatus || r.cells[4]?.textContent || r.cells[3]?.textContent || '').toLowerCase(),
+    change: r => (r.dataset.sortkeyChange || r.cells[3]?.textContent || '').toLowerCase(),
+    name:   r => (r.cells[0]?.textContent || '').toLowerCase(),
+  };
+  const getter = colMap[col] || (r=>(r.cells[0]?.textContent||'').toLowerCase());
+
+  rows.sort((a,b)=>{
+    const av = getter(a); const bv = getter(b);
+    return dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
 /* ── WIRE EVENTS ── */
 function wireEvents(){
+  wireTableSortHeaders();
   document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
