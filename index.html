@@ -271,7 +271,7 @@
       <div class="tq-controls">
         <div style="min-width:260px;">
           <label style="font-size:13px;font-weight:600;">Team</label>
-          <select id="tqTeamSelect"><option value="">— choose a team —</option></select>
+          <div id="tqTeamDrop" class="checkbox-dropdown"></div>
         </div>
         <div style="min-width:180px;">
           <label style="font-size:13px;font-weight:600;">Action Type</label>
@@ -588,43 +588,40 @@ function populateAllOptions(){
   });
   bulkRemoveDd.setOptions(qOpts);bulkAddDd.setOptions(qOpts);
 }
+let tqTeamDd = null;
+
 function populateTeamQuickSelect(){
-  const sel=document.getElementById('tqTeamSelect');
-  sel.innerHTML='<option value="">— choose a team —</option>';
-  [...allTeams].sort((a,b)=>a.name.localeCompare(b.name)).forEach(t=>{
-    sel.insertAdjacentHTML('beforeend',`<option value="${t.id}">${t.name}</option>`);
+  const tOpts=[...allTeams].sort((a,b)=>a.name.localeCompare(b.name)).map(t=>({value:t.id,label:t.name}));
+  tqTeamDd=makeCDD('tqTeamDrop','Select teams…','Search teams…',null,false);
+  tqTeamDd.setOptions(tOpts);
+  // Fire member load whenever user interacts with the dropdown (debounced)
+  let _tqTimer=null;
+  document.getElementById('tqTeamDrop').addEventListener('click',()=>{
+    clearTimeout(_tqTimer);_tqTimer=setTimeout(onTQTeamChange,80);
   });
-  sel.addEventListener('change', async ()=>{
-    const teamId = sel.value;
-    // Reset exclusions and preview
-    tqExcluded.clear();
-    tqTeamMembers = [];
-    const previewEl = document.getElementById('tqPreview');
-    const bodyEl    = document.getElementById('tqPreviewBody');
-    const btns      = document.querySelectorAll('#tqButtons .excl-btn');
+}
 
-    if(!teamId){
-      previewEl.style.display = 'none';
-      btns.forEach(b=>b.disabled=true);
-      return;
-    }
-
-    // Show preview panel with loading state
-    previewEl.style.display = 'block';
-    bodyEl.innerHTML = '<div class="tq-loading">⏳ Loading team members…</div>';
-    document.getElementById('tqMemberCount').textContent = '…';
-    btns.forEach(b=>b.disabled=true);
-
-    try{
-      const memberIds = await getTeamUserIds(teamId);
-      const valid = allUsers.filter(u=>u.name&&u.name.trim()&&u.name!=='Unknown User');
-      tqTeamMembers = memberIds.map(id=>valid.find(u=>u.id===id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
-      renderTQPreview();
-      btns.forEach(b=>b.disabled=false);
-    }catch(e){
-      bodyEl.innerHTML = `<div class="tq-loading" style="color:#dc2626;">Error loading members: ${e.message}</div>`;
-    }
-  });
+async function onTQTeamChange(){
+  const teamIds=tqTeamDd?tqTeamDd.get():[];
+  tqExcluded.clear();tqTeamMembers=[];
+  const previewEl=document.getElementById('tqPreview');
+  const bodyEl=document.getElementById('tqPreviewBody');
+  const btns=document.querySelectorAll('#tqButtons .excl-btn');
+  if(!teamIds.length){previewEl.style.display='none';btns.forEach(b=>b.disabled=true);return;}
+  previewEl.style.display='block';
+  bodyEl.innerHTML='<div class="tq-loading">⏳ Loading team members…</div>';
+  document.getElementById('tqMemberCount').textContent='…';
+  btns.forEach(b=>b.disabled=true);
+  try{
+    const allIds=(await Promise.all(teamIds.map(id=>getTeamUserIds(id)))).flat();
+    const uniqueIds=[...new Set(allIds)];
+    const valid=allUsers.filter(u=>u.name&&u.name.trim()&&u.name!=='Unknown User');
+    tqTeamMembers=uniqueIds.map(id=>valid.find(u=>u.id===id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
+    renderTQPreview();
+    btns.forEach(b=>b.disabled=false);
+  }catch(e){
+    bodyEl.innerHTML=`<div class="tq-loading" style="color:#dc2626;">Error loading members: ${e.message}</div>`;
+  }
 }
 
 /* ── TEAM PREVIEW TABLE ── */
@@ -1007,9 +1004,9 @@ function updateMQCounts(){
 
 /* ── TEAM QUICK ACTION ── */
 async function runTeamQuickAction(mt){
-  const teamId=document.getElementById('tqTeamSelect').value;
+  const teamIds=tqTeamDd?tqTeamDd.get():[];
   const action=document.getElementById('tqAction').value;
-  if(!teamId){showMsg('Select a team first');return;}
+  if(!teamIds.length){showMsg('Select at least one team first');return;}
   const statusEl=document.getElementById('tqStatus');
   document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=true);
   statusEl.textContent='Fetching team members…';
@@ -1066,7 +1063,7 @@ async function runTeamQuickAction(mt){
   }catch(e){
     console.error(e);showMsg(`Error: ${e.message}`);statusEl.textContent='';
   }finally{
-    const ok=!!document.getElementById('tqTeamSelect').value;
+    const ok=!!(tqTeamDd&&tqTeamDd.get().length);
     document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=!ok);
   }
 }
