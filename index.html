@@ -62,6 +62,11 @@
     .mt-callback{background:#dbeafe;color:#1e3a8a;border-color:#93c5fd;}
     .mt-unknown{background:#f5f5f5;color:#616161;border-color:#bdbdbd;}
 
+    /* Team badge */
+    .team-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;white-space:nowrap;margin:1px 2px;}
+    .team-badge.multi{background:#f5f3ff;color:#5b21b6;border-color:#c4b5fd;}
+    .no-team{color:var(--muted);font-size:11px;font-style:italic;}
+
     /* Status badges */
     .sb{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:600;}
     .sb-active{background:#d4edda;color:#155724;border:1px solid #b8ddc0;}
@@ -97,10 +102,19 @@
     .team-quick .sub{color:var(--muted);font-size:12px;margin-bottom:14px;}
     .tq-controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
     .tq-controls > div{display:flex;flex-direction:column;gap:4px;}
-    .excl-btns{display:flex;flex-wrap:wrap;gap:8px;}
+    .excl-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
     .excl-btn{padding:9px 16px;border:none;border-radius:6px;background:#6f42c1;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;}
     .excl-btn:hover{opacity:.88}
     .excl-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+    /* Enable All / Disable All buttons */
+    .tq-all-divider{width:1px;height:36px;background:#bfdbfe;margin:0 4px;align-self:center;}
+    .tq-all-btn{padding:9px 18px;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+    .tq-all-btn:hover{opacity:.88;}
+    .tq-all-btn:disabled{opacity:.35;cursor:not-allowed;}
+    .tq-all-btn.enable-all{background:#15803d;color:#fff;}
+    .tq-all-btn.disable-all{background:#b91c1c;color:#fff;}
+    .tq-all-label{font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.5px;align-self:center;margin:0 2px;}
 
     /* Team preview table */
     .tq-preview{margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none;}
@@ -140,7 +154,6 @@
     .tpanel-hdr button:hover{background:rgba(255,255,255,.35);}
     .stage-chip{background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:12px;}
 
-
     /* Sortable columns */
     th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:22px;}
     th.sortable::after{content:'\00a0\21C5';position:absolute;right:6px;opacity:.45;font-size:11px;}
@@ -149,6 +162,8 @@
     th.sortable:hover{background:var(--secondary);}
     /* Media type column — centred icon-only cell */
     .mt-col{text-align:center;width:90px;white-space:nowrap;}
+    /* Team column */
+    .team-col{min-width:120px;max-width:180px;}
 
     @media(max-width:768px){
       .bulk-section{grid-template-columns:1fr;}
@@ -200,6 +215,7 @@
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saRemove"></th>
           <th class="sortable" data-sort="name" data-table="tblRemove">Agent</th>
+          <th class="sortable" data-sort="team" data-table="tblRemove">Team(s)</th>
           <th class="sortable" data-sort="queues" data-table="tblRemove">Queues Assigned</th>
           <th class="mt-col">Media</th>
           <th style="width:220px;">Remove Queue</th>
@@ -239,6 +255,7 @@
         <thead><tr>
           <th style="width:36px;"><input type="checkbox" id="saAdd"></th>
           <th class="sortable" data-sort="name" data-table="tblAdd">Agent</th>
+          <th class="sortable" data-sort="team" data-table="tblAdd">Team(s)</th>
           <th class="sortable" data-sort="queues" data-table="tblAdd">Queues Assigned</th>
           <th class="mt-col">Media</th>
           <th style="width:220px;">Add Queue</th>
@@ -274,7 +291,7 @@
     <!-- TEAM QUICK ACTION -->
     <div class="team-quick">
       <h3>⚡ Team Quick Actions </h3>
-      <p class="sub">Pick a team and an action type, then click a media type button. Changes are applied immediately without needing to load the membership table. Callback is treated as Voice.</p>
+      <p class="sub">Pick a team and an action type, then click a media type button. <strong>Enable All</strong> activates every media type; <strong>Disable All</strong> deactivates every media type. Callback is treated as Voice.</p>
       <div class="tq-controls">
         <div style="min-width:260px;">
           <label style="font-size:13px;font-weight:600;">Team</label>
@@ -289,13 +306,24 @@
           </select>
         </div>
       </div>
+
+      <!-- Per-media buttons -->
       <div class="excl-btns" id="tqButtons">
         <button class="excl-btn" data-mt="voice"    disabled>📞 Voice</button>
         <button class="excl-btn" data-mt="email"    disabled>✉️ Email</button>
         <button class="excl-btn" data-mt="chat"     disabled>💬 Chat</button>
         <button class="excl-btn" data-mt="message"  disabled>📱 Message</button>
         <button class="excl-btn" data-mt="callback" disabled>🔄 Callback</button>
+
+        <!-- Divider -->
+        <div class="tq-all-divider"></div>
+        <span class="tq-all-label">All Media:</span>
+
+        <!-- Enable All / Disable All -->
+        <button class="tq-all-btn enable-all" id="tqEnableAll"  disabled>✅ Enable All</button>
+        <button class="tq-all-btn disable-all" id="tqDisableAll" disabled>🚫 Disable All</button>
       </div>
+
       <div class="muted" style="margin-top:10px;" id="tqStatus"></div>
 
       <!-- TEAM PREVIEW TABLE -->
@@ -344,12 +372,13 @@
               <thead id="theadCurrent"><tr>
                 <th style="width:36px;"><input type="checkbox" id="saCurrent"></th>
                 <th class="sortable" data-sort="agent" data-target="tbodyCurrent">Agent</th>
+                <th class="sortable team-col" data-sort="team" data-target="tbodyCurrent">Team(s)</th>
                 <th class="sortable" data-sort="queue" data-target="tbodyCurrent">Queue</th>
                 <th class="mt-col sortable" data-sort="media" data-target="tbodyCurrent">Media</th>
                 <th class="sortable" data-sort="status" data-target="tbodyCurrent">Status</th>
               </tr></thead>
               <tbody id="tbodyCurrent">
-                <tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Load users above to populate</td></tr>
+                <tr><td colspan="6" class="muted" style="padding:20px;text-align:center;">Load users above to populate</td></tr>
               </tbody>
             </table>
           </div>
@@ -394,6 +423,10 @@ const API = 'https://api.mypurecloud.ie/api/v2';
 let token = null;
 let allUsers=[], allQueues=[], allTeams=[], allMUs=[];
 const qMediaType = new Map();
+
+// userTeamMap: userId -> [{id, name}]  — built once at init
+const userTeamMap = new Map();
+
 let activeMemberships = [];
 let pendingChanges = [];
 let fetchedData = {usersWithQueues:[],queueIds:[]};
@@ -445,6 +478,19 @@ function mtBadge(mt) {
 
 function cap(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
 
+/* ── TEAM BADGE HELPER ── */
+function teamBadgesForUser(userId) {
+  const teams = userTeamMap.get(userId) || [];
+  if (!teams.length) return '<span class="no-team">—</span>';
+  if (teams.length === 1) return `<span class="team-badge">${teams[0].name}</span>`;
+  return teams.map(t => `<span class="team-badge multi">${t.name}</span>`).join(' ');
+}
+
+function teamNamesForSort(userId) {
+  const teams = userTeamMap.get(userId) || [];
+  return teams.map(t => t.name).join(', ').toLowerCase();
+}
+
 /* ── STARTUP ── */
 document.addEventListener('DOMContentLoaded', () => {
   const hash = window.location.hash.substring(1);
@@ -486,6 +532,10 @@ async function initApp() {
       paginate(`${API}/workforcemanagement/managementunits`),
     ]);
     allQueues.forEach(q => qMediaType.set(q.id, detectMediaType(q)));
+
+    // Build userTeamMap: for each team, fetch members and map userId -> [teams]
+    await buildUserTeamMap();
+
     buildAllDropdowns();
     buildBulkDropdowns();
     populateAllOptions();
@@ -496,6 +546,26 @@ async function initApp() {
     console.error(e);
     showMsg('Initialisation error — redirecting…');
     setTimeout(()=>window.location.href=OAUTH_URL, 2500);
+  }
+}
+
+/* ── BUILD USER→TEAM MAP ── */
+async function buildUserTeamMap() {
+  // Fetch members for all teams in parallel (batched to avoid hammering API)
+  const batchSize = 10;
+  for (let i = 0; i < allTeams.length; i += batchSize) {
+    const batch = allTeams.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(t => getTeamUserIds(t.id).then(ids => ({ team: t, ids })))
+    );
+    results.forEach(r => {
+      if (r.status !== 'fulfilled') return;
+      const { team, ids } = r.value;
+      ids.forEach(uid => {
+        if (!userTeamMap.has(uid)) userTeamMap.set(uid, []);
+        userTeamMap.get(uid).push({ id: team.id, name: team.name });
+      });
+    });
   }
 }
 
@@ -604,7 +674,6 @@ function populateTeamQuickSelect(){
   const tOpts=[...allTeams].sort((a,b)=>a.name.localeCompare(b.name)).map(t=>({value:t.id,label:t.name}));
   tqTeamDd=makeCDD('tqTeamDrop','Select teams…','Search teams…',null,false);
   tqTeamDd.setOptions(tOpts);
-  // Fire member load whenever user interacts with the dropdown (debounced)
   let _tqTimer=null;
   document.getElementById('tqTeamDrop').addEventListener('click',()=>{
     clearTimeout(_tqTimer);_tqTimer=setTimeout(onTQTeamChange,80);
@@ -617,18 +686,27 @@ async function onTQTeamChange(){
   const previewEl=document.getElementById('tqPreview');
   const bodyEl=document.getElementById('tqPreviewBody');
   const btns=document.querySelectorAll('#tqButtons .excl-btn');
-  if(!teamIds.length){previewEl.style.display='none';btns.forEach(b=>b.disabled=true);return;}
+  const allBtns=[
+    ...document.querySelectorAll('#tqButtons .excl-btn'),
+    document.getElementById('tqEnableAll'),
+    document.getElementById('tqDisableAll'),
+  ];
+  if(!teamIds.length){
+    previewEl.style.display='none';
+    allBtns.forEach(b=>b.disabled=true);
+    return;
+  }
   previewEl.style.display='block';
   bodyEl.innerHTML='<div class="tq-loading">⏳ Loading team members…</div>';
   document.getElementById('tqMemberCount').textContent='…';
-  btns.forEach(b=>b.disabled=true);
+  allBtns.forEach(b=>b.disabled=true);
   try{
     const allIds=(await Promise.all(teamIds.map(id=>getTeamUserIds(id)))).flat();
     const uniqueIds=[...new Set(allIds)];
     const valid=allUsers.filter(u=>u.name&&u.name.trim()&&u.name!=='Unknown User');
     tqTeamMembers=uniqueIds.map(id=>valid.find(u=>u.id===id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name));
     renderTQPreview();
-    btns.forEach(b=>b.disabled=false);
+    allBtns.forEach(b=>b.disabled=false);
   }catch(e){
     bodyEl.innerHTML=`<div class="tq-loading" style="color:#dc2626;">Error loading members: ${e.message}</div>`;
   }
@@ -662,7 +740,7 @@ function renderTQPreview(){
   const tbody = document.createElement('tbody');
   tbody.id = 'tqTbody';
 
-  tqTeamMembers.forEach((u,i)=>{
+  tqTeamMembers.forEach((u)=>{
     const excluded = tqExcluded.has(u.id);
     const row = document.createElement('tr');
     if(excluded) row.style.opacity='0.45';
@@ -777,9 +855,9 @@ async function resolveUsers(mode){
 /* ── FETCH USERS (remove/add) ── */
 async function fetchUsers(mode){
   const tbody=document.querySelector(`#tbl${cap(mode)} tbody`);
-  tbody.innerHTML=`<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="6" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>`;
   const users=await resolveUsers(mode);
-  if(!users||!users.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';return;}
+  if(!users||!users.length){tbody.innerHTML='<tr><td colspan="6">No users found</td></tr>';return;}
   const queueIds=dd.queue[mode].get();
   const uwq=await Promise.all(users.map(async u=>({user:u,queues:await fetchUserQueues(u.id)})));
   let filtered=uwq;
@@ -796,15 +874,20 @@ async function fetchUsers(mode){
 function renderRemoveTable(list){
   const tbody=document.querySelector('#tblRemove tbody');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';updateRemoveBtn();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6">No users found</td></tr>';updateRemoveBtn();return;}
   list.forEach(({user,queues})=>{
-    // For the selected queue in the dropdown, show its media type in the Media column
     const opts=queues.length?['<option value="">Select Queue</option>',...queues.map(q=>`<option value="${q.id}" data-mt="${qMediaType.get(q.id)||'unknown'}">${q.name}</option>`)]
       :['<option value="">No queues</option>'];
+    const teamHtml = teamBadgesForUser(user.id);
+    const teamSort = teamNamesForSort(user.id);
     const row=document.createElement('tr');
+    row.dataset.sortkeyName  = user.name.toLowerCase();
+    row.dataset.sortkeyTeam  = teamSort;
+    row.dataset.sortkeyQueues= queues.map(q=>q.name).join(', ').toLowerCase();
     row.innerHTML=`
       <td><input type="checkbox" class="cb-remove" data-uid="${user.id}"></td>
       <td>${user.name}</td>
+      <td class="team-col">${teamHtml}</td>
       <td style="font-size:12px;">${queues.length?queues.map(q=>q.name).join(', '):'No queues'}</td>
       <td class="mt-col"><span class="sel-mt-badge-remove" data-uid="${user.id}"></span></td>
       <td><select class="sel-remove" data-uid="${user.id}" ${queues.length?'':'disabled'} style="width:100%;font-size:12px;">${opts.join('')}</select></td>`;
@@ -815,7 +898,6 @@ function renderRemoveTable(list){
     if(this.value){
       const cb=document.querySelector(`.cb-remove[data-uid="${this.dataset.uid}"]`);
       if(cb)cb.checked=true;
-      // Update media badge
       const selOpt = this.options[this.selectedIndex];
       const mt = selOpt ? selOpt.getAttribute('data-mt') : 'unknown';
       const badge = document.querySelector(`.sel-mt-badge-remove[data-uid="${this.dataset.uid}"]`);
@@ -838,7 +920,7 @@ function updateRemoveBtn(){
 function renderAddTable(list,preIds=[]){
   const tbody=document.querySelector('#tblAdd tbody');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="5">No users found</td></tr>';updateAddBtn();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6">No users found</td></tr>';updateAddBtn();return;}
   list.forEach(({user,queues})=>{
     const assigned=queues.map(q=>q.id);
     const choices=allQueues.filter(q=>!assigned.includes(q.id));
@@ -846,10 +928,16 @@ function renderAddTable(list,preIds=[]){
     const opts=choices.length?['<option value="">Select Queue</option>',...choices.map(q=>`<option value="${q.id}" data-mt="${qMediaType.get(q.id)||'unknown'}" ${q.id===pre?'selected':''}>${q.name}</option>`)]
       :['<option value="">All assigned</option>'];
     const initialMt = pre ? (qMediaType.get(pre)||'unknown') : null;
+    const teamHtml = teamBadgesForUser(user.id);
+    const teamSort = teamNamesForSort(user.id);
     const row=document.createElement('tr');
+    row.dataset.sortkeyName  = user.name.toLowerCase();
+    row.dataset.sortkeyTeam  = teamSort;
+    row.dataset.sortkeyQueues= queues.map(q=>q.name).join(', ').toLowerCase();
     row.innerHTML=`
       <td><input type="checkbox" class="cb-add" data-uid="${user.id}"></td>
       <td>${user.name}</td>
+      <td class="team-col">${teamHtml}</td>
       <td style="font-size:12px;">${queues.length?queues.map(q=>q.name).join(', '):'No queues'}</td>
       <td class="mt-col"><span class="sel-mt-badge-add" data-uid="${user.id}">${initialMt?mtBadge(initialMt):''}</span></td>
       <td><select class="sel-add" data-uid="${user.id}" ${choices.length?'':'disabled'} style="width:100%;font-size:12px;">${opts.join('')}</select></td>`;
@@ -886,7 +974,7 @@ async function fetchActivationData(){
   const teamIds=dd.team.activate.get(),muIds=dd.mu.activate.get();
   const sf=document.getElementById('statusFilter').value;
   if(!agentIds.length&&!queueIds.length&&!teamIds.length&&!muIds.length){showMsg('Select at least one filter');return;}
-  document.getElementById('tbodyCurrent').innerHTML='<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>';
+  document.getElementById('tbodyCurrent').innerHTML='<tr><td colspan="6" class="muted" style="padding:20px;text-align:center;">Loading…</td></tr>';
 
   let targetUsers=new Set();
   if(agentIds.length) agentIds.forEach(id=>targetUsers.add(id));
@@ -927,21 +1015,25 @@ async function fetchActivationData(){
 function renderCurrentTable(list){
   const tbody=document.getElementById('tbodyCurrent');
   tbody.innerHTML='';
-  if(!list.length){tbody.innerHTML='<tr><td colspan="5" class="muted" style="padding:20px;text-align:center;">No memberships found</td></tr>';updateActivateBtns();return;}
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6" class="muted" style="padding:20px;text-align:center;">No memberships found</td></tr>';updateActivateBtns();return;}
   const sorted=[...list].sort((a,b)=>a.userName.localeCompare(b.userName)||a.queueName.localeCompare(b.queueName));
   sorted.forEach(m=>{
     const pend=getPending(m.userId,m.queueId);
     const effJoined=pend!==null?pend:m.joined;
     const hasPend=pend!==null;
+    const teamHtml = teamBadgesForUser(m.userId);
+    const teamSort = teamNamesForSort(m.userId);
     const row=document.createElement('tr');
     if(hasPend)row.className='pending-row';
     row.dataset.sortkeyAgent  = m.userName.toLowerCase();
+    row.dataset.sortkeyTeam   = teamSort;
     row.dataset.sortkeyQueue  = m.queueName.toLowerCase();
     row.dataset.sortkeyMedia  = m.mediaType.toLowerCase();
     row.dataset.sortkeyStatus = effJoined ? 'active' : 'inactive';
     row.innerHTML=`
       <td><input type="checkbox" class="cb-act" data-uid="${m.userId}" data-qid="${m.queueId}" data-joined="${effJoined}" data-mt="${m.mediaType}"></td>
       <td>${m.userName}</td>
+      <td class="team-col">${teamHtml}</td>
       <td>${m.queueName}${hasPend?'<span class="pbadge">Pending</span>':''}</td>
       <td class="mt-col">${mtBadge(m.mediaType)}</td>
       <td><span class="sb ${effJoined?'sb-active':'sb-inactive'}">${effJoined?'Active':'Inactive'}</span></td>`;
@@ -1021,22 +1113,31 @@ function updateMQCounts(){
 }
 
 /* ── TEAM QUICK ACTION ── */
-async function runTeamQuickAction(mt){
+async function runTeamQuickAction(mt, isAll=false, allActivate=true){
   const teamIds=tqTeamDd?tqTeamDd.get():[];
-  const action=document.getElementById('tqAction').value;
+  const action = isAll ? (allActivate ? 'activate' : 'deactivate') : document.getElementById('tqAction').value;
   if(!teamIds.length){showMsg('Select at least one team first');return;}
   const statusEl=document.getElementById('tqStatus');
-  document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=true);
-  statusEl.textContent='Fetching team members…';
+
+  // Disable all team-quick buttons during operation
+  const allTQBtns=[
+    ...document.querySelectorAll('#tqButtons .excl-btn'),
+    document.getElementById('tqEnableAll'),
+    document.getElementById('tqDisableAll'),
+  ];
+  allTQBtns.forEach(b=>b.disabled=true);
+  statusEl.textContent = isAll
+    ? `${allActivate?'Enabling':'Disabling'} all media types for team members…`
+    : 'Fetching team members…';
   try{
-    // Use already-loaded tqTeamMembers, but filter out excluded users
     const activeMembers = tqTeamMembers.filter(u=>!tqExcluded.has(u.id));
     if(!activeMembers.length){showMsg('No users to process (all excluded or empty team)');return;}
     const teamSet=new Set(activeMembers.map(u=>u.id));
     statusEl.textContent=`${activeMembers.length} users (${tqExcluded.size} excluded) — fetching queue memberships…`;
 
-    const isExclusive = action==='exclusive';
-    const queuesToCheck = isExclusive
+    // For "all media" actions we check every queue; for exclusive we also check all queues
+    const isExclusive = (!isAll) && action==='exclusive';
+    const queuesToCheck = (isAll || isExclusive)
       ? allQueues
       : allQueues.filter(q=>{
           const qmt=qMediaType.get(q.id)||'voice';
@@ -1051,7 +1152,10 @@ async function runTeamQuickAction(mt){
         const uid=m.user?.id||m.id;
         if(!uid||!teamSet.has(uid))return;
         let shouldActivate;
-        if(isExclusive){
+        if(isAll){
+          // Enable All or Disable All — apply to every media type
+          shouldActivate = allActivate;
+        } else if(isExclusive){
           const isTarget=qmt===mt||(mt==='voice'&&qmt==='callback');
           shouldActivate=isTarget;
         } else if(action==='activate'){
@@ -1076,13 +1180,13 @@ async function runTeamQuickAction(mt){
       statusEl.textContent=`Applied ${done}/${ops.length}${failed?` (${failed} errors)`:''}…`;
     }
     if(failed)showMsg(`${failed} failures out of ${ops.length}`);
-    else showMsg(`✅ Applied ${done} change${done!==1?'s':''}`,'success');
+    else showMsg(`✅ Applied ${done} change${done!==1?'s':''}${isAll?' across all media types':''}`, 'success');
     statusEl.textContent=`Done — ${done} change${done!==1?'s':''} applied${tqExcluded.size>0?` (${tqExcluded.size} users excluded)`:''}.`;
   }catch(e){
     console.error(e);showMsg(`Error: ${e.message}`);statusEl.textContent='';
   }finally{
     const ok=!!(tqTeamDd&&tqTeamDd.get().length);
-    document.querySelectorAll('#tqButtons .excl-btn').forEach(b=>b.disabled=!ok);
+    allTQBtns.forEach(b=>b.disabled=!ok);
   }
 }
 
@@ -1164,12 +1268,8 @@ async function applyBulkAdd(){
 }
 
 
-/* ── SORTABLE TABLES ───────────────────────────────────────────────────
-   Works for:
-   - Remove / Add tables  (data-sort on static th, data-table = table id)
-   - Current / Staged / TQ preview (data-sort on th, data-target = tbody id)
-─────────────────────────────────────────────────────────────────────── */
-const _sortState = {};  // key -> {col, dir}
+/* ── SORTABLE TABLES ── */
+const _sortState = {};
 
 function getSortKey(key){ return _sortState[key] || {col:null,dir:'asc'}; }
 
@@ -1180,28 +1280,14 @@ function applySortIndicators(ths, col, dir){
   });
 }
 
-// Generic sort for a tbody whose rows have data-* attributes
-function sortTbodyByAttr(tbodyId, col, dir){
-  const tbody = document.getElementById(tbodyId);
-  if(!tbody) return;
-  const rows = [...tbody.querySelectorAll('tr')];
-  if(rows.length <= 1) return;
-  rows.sort((a,b)=>{
-    const av = (a.dataset[col]||a.cells[0]?.textContent||'').toLowerCase();
-    const bv = (b.dataset[col]||b.cells[0]?.textContent||'').toLowerCase();
-    return dir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-  });
-  rows.forEach(r=>tbody.appendChild(r));
-}
-
-// Sort for Remove/Add tables (rows have td text content)
 function sortFetchedTable(mode, col, dir){
   const tableId = mode==='remove' ? 'tblRemove' : 'tblAdd';
   const tbody = document.querySelector(`#${tableId} tbody`);
   if(!tbody) return;
   const rows = [...tbody.querySelectorAll('tr')];
   if(rows.length <= 1) return;
-  const colIdx = col==='name' ? 1 : 2;  // Agent=1, Queues=2
+  // col: name=1, team=2, queues=3
+  const colIdx = col==='name' ? 1 : col==='team' ? 2 : 3;
   rows.sort((a,b)=>{
     const av = (a.cells[colIdx]?.textContent||'').trim().toLowerCase();
     const bv = (b.cells[colIdx]?.textContent||'').trim().toLowerCase();
@@ -1211,7 +1297,6 @@ function sortFetchedTable(mode, col, dir){
 }
 
 function wireTableSortHeaders(){
-  // Remove + Add static headers
   ['tblRemove','tblAdd'].forEach(tblId=>{
     const mode = tblId==='tblRemove' ? 'remove' : 'add';
     document.querySelectorAll(`#${tblId} th.sortable`).forEach(th=>{
@@ -1227,7 +1312,6 @@ function wireTableSortHeaders(){
     });
   });
 
-  // Current memberships + Staged + TQ preview (dynamic — use event delegation on document)
   document.addEventListener('click', e=>{
     const th = e.target.closest('th.sortable[data-target]');
     if(!th) return;
@@ -1236,7 +1320,6 @@ function wireTableSortHeaders(){
     const st      = getSortKey(tbodyId);
     const dir     = (st.col===col && st.dir==='asc') ? 'desc' : 'asc';
     _sortState[tbodyId] = {col, dir};
-    // Get sibling ths for indicator update
     const ths = [...th.closest('thead').querySelectorAll('th.sortable')];
     applySortIndicators(ths, col, dir);
     sortTbodyByDataAttr(tbodyId, col, dir);
@@ -1246,14 +1329,14 @@ function wireTableSortHeaders(){
 function sortTbodyByDataAttr(tbodyId, col, dir){
   const tbody = document.getElementById(tbodyId);
   if(!tbody) return;
-  const rows = [...tbody.querySelectorAll('tr[data-sortkey-agent], tr[data-sortkey-queue], tr')];
+  const rows = [...tbody.querySelectorAll('tr')];
 
-  // Use data-sortkey-* attributes we'll add when rendering, falling back to cell text
   const colMap = {
     agent:  r => (r.dataset.sortkeyAgent  || r.cells[1]?.textContent || r.cells[0]?.textContent || '').toLowerCase(),
-    queue:  r => (r.dataset.sortkeyQueue  || r.cells[2]?.textContent || r.cells[1]?.textContent || '').toLowerCase(),
-    media:  r => (r.dataset.sortkeyMedia  || r.cells[3]?.textContent || r.cells[2]?.textContent || '').toLowerCase(),
-    status: r => (r.dataset.sortkeyStatus || r.cells[4]?.textContent || r.cells[3]?.textContent || '').toLowerCase(),
+    team:   r => (r.dataset.sortkeyTeam   || r.cells[2]?.textContent || '').toLowerCase(),
+    queue:  r => (r.dataset.sortkeyQueue  || r.cells[3]?.textContent || r.cells[2]?.textContent || '').toLowerCase(),
+    media:  r => (r.dataset.sortkeyMedia  || r.cells[4]?.textContent || r.cells[3]?.textContent || '').toLowerCase(),
+    status: r => (r.dataset.sortkeyStatus || r.cells[5]?.textContent || r.cells[4]?.textContent || '').toLowerCase(),
     change: r => (r.dataset.sortkeyChange || r.cells[3]?.textContent || '').toLowerCase(),
     name:   r => (r.cells[0]?.textContent || '').toLowerCase(),
   };
@@ -1295,7 +1378,14 @@ function wireEvents(){
   document.getElementById('clearPendingBtn').addEventListener('click',()=>{pendingChanges=[];refreshView();});
   document.getElementById('saCurrent').addEventListener('change',function(){document.querySelectorAll('.cb-act').forEach(cb=>cb.checked=this.checked);updateActivateBtns();updateMQCounts();});
 
-  document.querySelectorAll('#tqButtons .excl-btn').forEach(btn=>btn.addEventListener('click',()=>runTeamQuickAction(btn.getAttribute('data-mt'))));
+  // Per-media-type team quick action buttons
+  document.querySelectorAll('#tqButtons .excl-btn').forEach(btn=>
+    btn.addEventListener('click',()=>runTeamQuickAction(btn.getAttribute('data-mt'), false))
+  );
+
+  // Enable All / Disable All
+  document.getElementById('tqEnableAll').addEventListener('click', ()=>runTeamQuickAction(null, true, true));
+  document.getElementById('tqDisableAll').addEventListener('click', ()=>runTeamQuickAction(null, true, false));
 
   document.getElementById('tqClearExclusions').addEventListener('click',()=>{
     tqExcluded.clear();
